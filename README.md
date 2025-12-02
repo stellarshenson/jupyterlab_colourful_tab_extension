@@ -8,13 +8,23 @@
 [![Brought To You By KOLOMOLO](https://img.shields.io/badge/Brought%20To%20You%20By-KOLOMOLO-00ffff?style=flat)](https://kolomolo.com)
 [![Donate PayPal](https://img.shields.io/badge/Donate-PayPal-blue?style=flat)](https://www.paypal.com/donate/?hosted_button_id=B4KPBJDLLXTSA)
 
-Applies pastel colours to JupyterLab tabs for visual identification when many tabs are open. Colours persist between browser refreshes.
+A JupyterLab extension that applies pastel colours to tabs for visual identification when many tabs are open.
 
 ## Features
 
-- **Automatic tab colouring** - Each tab receives a unique pastel colour for easy identification
-- **Persistent colours** - Tab colours survive browser refreshes via server-side storage
-- **Pastel palette** - Soft, non-distracting colours that work with both light and dark themes
+Assign colours to tabs via right-click context menu for easy visual identification when working with multiple notebooks and files.
+
+**Colour options**:
+
+- Red, Orange, Yellow, Green, Blue, Purple
+- Pastel shades optimised for both light and dark themes
+
+**Key features**:
+
+- Right-click any tab to assign a colour from the "Set Tab Colour" submenu
+- Colours persist across browser refreshes via localStorage
+- Notebook toolbar matches the active tab colour
+- Automatic cleanup when tabs are closed
 
 ## Requirements
 

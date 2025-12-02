@@ -15,12 +15,12 @@
 
 /* Dark theme muted colours */
 [data-jp-theme-light='false'] {
-  --jp-colourful-tab-rose: #6e4550;
-  --jp-colourful-tab-peach: #6e5a48;
-  --jp-colourful-tab-lemon: #6e6a48;
-  --jp-colourful-tab-mint: #486e4d;
-  --jp-colourful-tab-sky: #48607e;
-  --jp-colourful-tab-lavender: #5a486e;
+  --jp-colourful-tab-rose: #5a3840;
+  --jp-colourful-tab-peach: #5a4a3a;
+  --jp-colourful-tab-lemon: #5a563a;
+  --jp-colourful-tab-mint: #3a5a3f;
+  --jp-colourful-tab-sky: #2e4258;
+  --jp-colourful-tab-lavender: #4a3a5a;
 }
 
 /* Colour selection menu */
