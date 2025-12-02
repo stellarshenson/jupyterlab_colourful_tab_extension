@@ -30,3 +30,9 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 9. **Task - Darken dark mode colours and update CI/README**: Made all dark theme colours darker and aligned project with reference workflow<br>
    **Result**: Updated all dark mode colour values in `style/base.css` to be darker (rose: `#5a3840`, peach: `#5a4a3a`, lemon: `#5a563a`, mint: `#3a5a3f`, sky: `#2e4258`, lavender: `#4a3a5a`). Updated `.github/workflows/build.yml` to match `jupyterlab_terraform_file_type_extension` reference: Python 3.12, removed server extension checks (frontend-only), added `ignore_links` for badge URLs. Updated `README.md` with accurate feature descriptions including context menu usage, colour options, and toolbar colouring. Released as v1.0.9
+
+10. **Task - Fix CI lint and add screenshots**: Fixed CI build failures and enhanced README documentation<br>
+    **Result**: Added `repository.url`, `homepage`, and `bugs.url` to `package.json` for npm release check. Added screenshots to README (`screenshot-tabs.png`, `screenshot-menu.png`) with descriptions. Fixed CSS lint errors: changed `rgba()` to modern `rgb()` notation, added empty lines before `::part()` rules. Added self-deprecating comment to README. Ran prettier to fix formatting in `.claude/CLAUDE.md`, `.claude/JOURNAL.md`, `package-lock.json`, `src/index.ts`, and UI tests
+
+11. **Task - Publish v1.0.10 and update CHANGELOG**: Built and prepared release packages, created comprehensive changelog<br>
+    **Result**: Ran `make publish` to build v1.0.10 packages in `dist/`. Created `CHANGELOG.md` following nb_venv_kernels style with entries for v1.0.10, v1.0.9, v1.0.7, v1.0.3, and v1.0.0 documenting: screenshots/docs additions, CI/CD fixes, dark mode colour updates, toolbar colouring, colour persistence, and initial release features
