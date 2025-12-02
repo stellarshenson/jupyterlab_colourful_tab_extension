@@ -34,6 +34,8 @@ Assign colours to tabs via right-click context menu for easy visual identificati
 - Notebook toolbar matches the active tab colour
 - Automatic cleanup when tabs are closed
 
+Yes, this is yet another mass-produced JupyterLab extension that does one trivially simple thing. We are almost embarrassed by how utterly unremarkable it is - just some CSS classes and a context menu. But someone had to do it, and here we are. You're welcome.
+
 ## Requirements
 
 - JupyterLab >= 4.0.0

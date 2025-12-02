@@ -30,7 +30,7 @@
   background-color: var(--jp-layout-color1);
   border: 1px solid var(--jp-border-color1);
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
   min-width: 140px;
   padding: 4px 0;
 }
@@ -87,6 +87,7 @@
 .jp-colourful-tab-rose * {
   background-color: var(--jp-colourful-tab-rose) !important;
 }
+
 .jp-colourful-tab-rose::part(positioning-region) {
   background-color: var(--jp-colourful-tab-rose) !important;
 }
@@ -95,6 +96,7 @@
 .jp-colourful-tab-peach * {
   background-color: var(--jp-colourful-tab-peach) !important;
 }
+
 .jp-colourful-tab-peach::part(positioning-region) {
   background-color: var(--jp-colourful-tab-peach) !important;
 }
@@ -103,6 +105,7 @@
 .jp-colourful-tab-lemon * {
   background-color: var(--jp-colourful-tab-lemon) !important;
 }
+
 .jp-colourful-tab-lemon::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lemon) !important;
 }
@@ -111,6 +114,7 @@
 .jp-colourful-tab-mint * {
   background-color: var(--jp-colourful-tab-mint) !important;
 }
+
 .jp-colourful-tab-mint::part(positioning-region) {
   background-color: var(--jp-colourful-tab-mint) !important;
 }
@@ -119,6 +123,7 @@
 .jp-colourful-tab-sky * {
   background-color: var(--jp-colourful-tab-sky) !important;
 }
+
 .jp-colourful-tab-sky::part(positioning-region) {
   background-color: var(--jp-colourful-tab-sky) !important;
 }
@@ -127,6 +132,7 @@
 .jp-colourful-tab-lavender * {
   background-color: var(--jp-colourful-tab-lavender) !important;
 }
+
 .jp-colourful-tab-lavender::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lavender) !important;
 }
