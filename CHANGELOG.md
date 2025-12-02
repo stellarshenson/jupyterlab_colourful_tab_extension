@@ -2,6 +2,15 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.0.15
+
+### Theme-Aware Colour Icons
+
+- Added coloured square icons next to each colour option in context menu
+- Icons use CSS variables for automatic light/dark theme switching
+- Added `@jupyterlab/ui-components` dependency for `LabIcon`
+- Created `createColourIcon()` function with CSS class-based SVG fill
+
 ## 1.0.10
 
 ### Screenshots and Documentation
