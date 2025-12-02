@@ -10,6 +10,14 @@
 
 A JupyterLab extension that applies pastel colours to tabs for visual identification when many tabs are open.
 
+Coloured tabs make it easy to identify different notebooks and files at a glance.
+
+![](.resources/screenshot-tabs.png)
+
+Right-click any tab to select a colour from the "Tab Colour" submenu.
+
+![](.resources/screenshot-menu.png)
+
 ## Features
 
 Assign colours to tabs via right-click context menu for easy visual identification when working with multiple notebooks and files.
