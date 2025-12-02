@@ -1,0 +1,17 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.5.1
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: konrad.jelen@gmail.com
+author_name: Stellars Henson
+has_ai_rules: false
+has_binder: false
+has_settings: false
+kind: frontend-and-server
+labextension_name: jupyterlab_colourful_tab_extension
+project_short_description: Jupyterlab extension that makes the tabs coloured (using
+    pastel colours) to help you find tab when many of them are opened. Colour persists
+    between refreshes
+python_name: jupyterlab_colourful_tab_extension
+repository: ''
+test: true
+

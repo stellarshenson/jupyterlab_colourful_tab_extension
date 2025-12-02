@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Colourful Tab Extension",
+  "description": "Settings for jupyterlab_colourful_tab_extension",
+  "type": "object",
+  "jupyter.lab.menus": {
+    "context": [
+      {
+        "type": "submenu",
+        "selector": "#jp-main-dock-panel .lm-DockPanel-tabBar .lm-TabBar-tab",
+        "rank": 100,
+        "submenu": {
+          "id": "jp-contextmenu-colourful-tab",
+          "label": "Tab Colour",
+          "items": [
+            { "command": "colourful-tab:set-rose" },
+            { "command": "colourful-tab:set-peach" },
+            { "command": "colourful-tab:set-lemon" },
+            { "command": "colourful-tab:set-mint" },
+            { "command": "colourful-tab:set-sky" },
+            { "command": "colourful-tab:set-lavender" },
+            { "type": "separator" },
+            { "command": "colourful-tab:clear" }
+          ]
+        }
+      }
+    ]
+  },
+  "properties": {},
+  "additionalProperties": false
+}

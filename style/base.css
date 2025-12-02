@@ -1,0 +1,115 @@
+/*
+    See the JupyterLab Developer Guide for useful CSS Patterns:
+    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+*/
+
+/* Light theme pastel colours */
+:root {
+  --jp-colourful-tab-rose: #ffd6e0;
+  --jp-colourful-tab-peach: #ffe5cc;
+  --jp-colourful-tab-lemon: #fff9c4;
+  --jp-colourful-tab-mint: #c8f7c5;
+  --jp-colourful-tab-sky: #c5e8f7;
+  --jp-colourful-tab-lavender: #e5d6f7;
+}
+
+/* Dark theme pastel colours */
+[data-jp-theme-light='false'] {
+  --jp-colourful-tab-rose: #5c3a42;
+  --jp-colourful-tab-peach: #5c4a3a;
+  --jp-colourful-tab-lemon: #5c5a3a;
+  --jp-colourful-tab-mint: #3a5c3f;
+  --jp-colourful-tab-sky: #3a4a5c;
+  --jp-colourful-tab-lavender: #4a3a5c;
+}
+
+/* Colour selection menu */
+.jp-colourful-tab-menu {
+  position: fixed;
+  z-index: 10000;
+  background-color: var(--jp-layout-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  min-width: 140px;
+  padding: 4px 0;
+}
+
+.jp-colourful-tab-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--jp-ui-font-color1);
+}
+
+.jp-colourful-tab-menu-item:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.jp-colourful-tab-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin-right: 8px;
+  border: 1px solid var(--jp-border-color2);
+}
+
+/* Swatch colours */
+.jp-colourful-tab-swatch-rose {
+  background-color: var(--jp-colourful-tab-rose);
+}
+
+.jp-colourful-tab-swatch-peach {
+  background-color: var(--jp-colourful-tab-peach);
+}
+
+.jp-colourful-tab-swatch-lemon {
+  background-color: var(--jp-colourful-tab-lemon);
+}
+
+.jp-colourful-tab-swatch-mint {
+  background-color: var(--jp-colourful-tab-mint);
+}
+
+.jp-colourful-tab-swatch-sky {
+  background-color: var(--jp-colourful-tab-sky);
+}
+
+.jp-colourful-tab-swatch-lavender {
+  background-color: var(--jp-colourful-tab-lavender);
+}
+
+/* Tab colours */
+.jp-colourful-tab-rose {
+  background-color: var(--jp-colourful-tab-rose) !important;
+}
+
+.jp-colourful-tab-peach {
+  background-color: var(--jp-colourful-tab-peach) !important;
+}
+
+.jp-colourful-tab-lemon {
+  background-color: var(--jp-colourful-tab-lemon) !important;
+}
+
+.jp-colourful-tab-mint {
+  background-color: var(--jp-colourful-tab-mint) !important;
+}
+
+.jp-colourful-tab-sky {
+  background-color: var(--jp-colourful-tab-sky) !important;
+}
+
+.jp-colourful-tab-lavender {
+  background-color: var(--jp-colourful-tab-lavender) !important;
+}
+
+.jp-colourful-tab-menu-clear {
+  border-top: 1px solid var(--jp-border-color1);
+  margin-top: 4px;
+  padding-top: 8px;
+  color: var(--jp-ui-font-color2);
+}
