@@ -3,6 +3,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITerminalTracker } from '@jupyterlab/terminal';
+import { LabIcon } from '@jupyterlab/ui-components';
 
 /**
  * Colour definitions - CSS classes are defined in style/base.css
@@ -16,6 +17,20 @@ const COLOURS = [
   { name: 'Blue', id: 'sky', cssClass: 'jp-colourful-tab-sky' },
   { name: 'Purple', id: 'lavender', cssClass: 'jp-colourful-tab-lavender' }
 ];
+
+/**
+ * Create a LabIcon with a coloured square SVG
+ * Uses CSS classes for theme-aware colours via CSS variables
+ */
+function createColourIcon(id: string): LabIcon {
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="jp-colourful-tab-icon-${id}">
+    <rect x="2" y="2" width="12" height="12" rx="2" class="jp-colourful-tab-icon-rect" stroke="#888" stroke-width="1"/>
+  </svg>`;
+  return new LabIcon({
+    name: `colourful-tab:icon-${id}`,
+    svgstr: svgStr
+  });
+}
 
 /**
  * LocalStorage key for persisting tab colours
@@ -292,10 +307,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
       true // Use capture phase
     );
 
-    // Register colour commands
+    // Register colour commands with icons
     COLOURS.forEach((colour, index) => {
+      const icon = createColourIcon(colour.id);
       commands.addCommand(`colourful-tab:set-${colour.id}`, {
         label: colour.name,
+        icon: icon,
         caption: `Set tab colour to ${colour.name}`,
         execute: () => {
           // Verify we have a valid tab element

@@ -143,3 +143,28 @@
   padding-top: 8px;
   color: var(--jp-ui-font-color2);
 }
+
+/* Menu icon colours - use CSS variables for theme awareness */
+.jp-colourful-tab-icon-rose .jp-colourful-tab-icon-rect {
+  fill: var(--jp-colourful-tab-rose);
+}
+
+.jp-colourful-tab-icon-peach .jp-colourful-tab-icon-rect {
+  fill: var(--jp-colourful-tab-peach);
+}
+
+.jp-colourful-tab-icon-lemon .jp-colourful-tab-icon-rect {
+  fill: var(--jp-colourful-tab-lemon);
+}
+
+.jp-colourful-tab-icon-mint .jp-colourful-tab-icon-rect {
+  fill: var(--jp-colourful-tab-mint);
+}
+
+.jp-colourful-tab-icon-sky .jp-colourful-tab-icon-rect {
+  fill: var(--jp-colourful-tab-sky);
+}
+
+.jp-colourful-tab-icon-lavender .jp-colourful-tab-icon-rect {
+  fill: var(--jp-colourful-tab-lavender);
+}

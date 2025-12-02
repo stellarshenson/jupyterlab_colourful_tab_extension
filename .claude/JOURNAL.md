@@ -36,3 +36,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 11. **Task - Publish v1.0.10 and update CHANGELOG**: Built and prepared release packages, created comprehensive changelog<br>
     **Result**: Ran `make publish` to build v1.0.10 packages in `dist/`. Created `CHANGELOG.md` following nb_venv_kernels style with entries for v1.0.10, v1.0.9, v1.0.7, v1.0.3, and v1.0.0 documenting: screenshots/docs additions, CI/CD fixes, dark mode colour updates, toolbar colouring, colour persistence, and initial release features
+
+12. **Task - Add theme-aware colour icons to context menu**: Added SVG colour icons next to each colour option in the context menu<br>
+    **Result**: Added `@jupyterlab/ui-components` dependency for `LabIcon`. Created `createColourIcon()` function generating SVG with CSS class-based fill. Added CSS rules in `style/base.css` using `var(--jp-colourful-tab-*)` variables so icons automatically switch colours based on theme. Each colour command now has an icon property. Released as v1.0.14
