@@ -180,7 +180,10 @@ function refreshAllTabColours(): void {
 
   tabColours.forEach((colourIndex, storedId) => {
     const tabElement = currentTabs.get(storedId);
-    if (tabElement && !tabElement.classList.contains(COLOURS[colourIndex].cssClass)) {
+    if (
+      tabElement &&
+      !tabElement.classList.contains(COLOURS[colourIndex].cssClass)
+    ) {
       applyTabColour(tabElement, colourIndex);
     }
   });
@@ -213,7 +216,9 @@ function debouncedRefresh(): void {
  */
 function applyToolbarColour(): void {
   // Find the currently active tab
-  const activeTab = document.querySelector('#jp-main-dock-panel .lm-TabBar-tab.lm-mod-current') as HTMLElement;
+  const activeTab = document.querySelector(
+    '#jp-main-dock-panel .lm-TabBar-tab.lm-mod-current'
+  ) as HTMLElement;
   if (!activeTab) {
     return;
   }
@@ -234,9 +239,15 @@ function applyToolbarColour(): void {
   });
 
   // If the active tab has a colour, apply it to the active panel's toolbar
-  if (colourIndex !== undefined && colourIndex >= 0 && colourIndex < COLOURS.length) {
+  if (
+    colourIndex !== undefined &&
+    colourIndex >= 0 &&
+    colourIndex < COLOURS.length
+  ) {
     // Find the active panel's toolbar - it's in the currently visible notebook panel
-    const activePanel = document.querySelector('#jp-main-dock-panel .lm-DockPanel-widget:not(.lm-mod-hidden) jp-toolbar');
+    const activePanel = document.querySelector(
+      '#jp-main-dock-panel .lm-DockPanel-widget:not(.lm-mod-hidden) jp-toolbar'
+    );
     if (activePanel) {
       activePanel.classList.add(COLOURS[colourIndex].cssClass);
     }
@@ -252,10 +263,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     'JupyterLab extension that makes tabs coloured using pastel colours to help identify them when many are open',
   autoStart: true,
   optional: [ITerminalTracker],
-  activate: (
-    app: JupyterFrontEnd,
-    tracker: ITerminalTracker | null
-  ) => {
+  activate: (app: JupyterFrontEnd, tracker: ITerminalTracker | null) => {
     console.log(
       'JupyterLab extension jupyterlab_colourful_tab_extension is activated!'
     );
@@ -274,7 +282,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
       (event: MouseEvent) => {
         const target = event.target as HTMLElement;
         // Only capture tabs within the main dock panel tab bar
-        const tabElement = target.closest('#jp-main-dock-panel .lm-DockPanel-tabBar .lm-TabBar-tab') as HTMLElement;
+        const tabElement = target.closest(
+          '#jp-main-dock-panel .lm-DockPanel-tabBar .lm-TabBar-tab'
+        ) as HTMLElement;
         if (tabElement && tabElement.classList.contains('lm-TabBar-tab')) {
           currentTabElement = tabElement;
         }
@@ -289,7 +299,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
         caption: `Set tab colour to ${colour.name}`,
         execute: () => {
           // Verify we have a valid tab element
-          if (currentTabElement && currentTabElement.classList.contains('lm-TabBar-tab')) {
+          if (
+            currentTabElement &&
+            currentTabElement.classList.contains('lm-TabBar-tab')
+          ) {
             const stableId = getStableTabId(currentTabElement);
             if (stableId) {
               tabColours.set(stableId, index);
@@ -308,7 +321,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
       caption: 'Remove tab colour',
       execute: () => {
         // Verify we have a valid tab element
-        if (currentTabElement && currentTabElement.classList.contains('lm-TabBar-tab')) {
+        if (
+          currentTabElement &&
+          currentTabElement.classList.contains('lm-TabBar-tab')
+        ) {
           const stableId = getStableTabId(currentTabElement);
           if (stableId) {
             clearTabColour(currentTabElement);
@@ -322,19 +338,24 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     // Watch for DOM changes to reapply colours (e.g., when tabs are reordered or classes reset)
     app.restored.then(() => {
-      const observer = new MutationObserver((mutations) => {
+      const observer = new MutationObserver(mutations => {
         // Check if any mutation affects tab elements
         const affectsTabs = mutations.some(mutation => {
           // Check for class attribute changes on tabs
-          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (
+            mutation.type === 'attributes' &&
+            mutation.attributeName === 'class'
+          ) {
             const target = mutation.target as HTMLElement;
             return target.classList.contains('lm-TabBar-tab');
           }
           // Check for child list changes in tab bars
           if (mutation.type === 'childList') {
             const target = mutation.target as HTMLElement;
-            return target.classList.contains('lm-TabBar-content') ||
-                   target.closest('.lm-TabBar') !== null;
+            return (
+              target.classList.contains('lm-TabBar-content') ||
+              target.closest('.lm-TabBar') !== null
+            );
           }
           return false;
         });
