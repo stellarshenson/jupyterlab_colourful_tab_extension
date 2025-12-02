@@ -9,18 +9,18 @@
   --jp-colourful-tab-peach: #ffe5cc;
   --jp-colourful-tab-lemon: #fff9c4;
   --jp-colourful-tab-mint: #c8f7c5;
-  --jp-colourful-tab-sky: #c5e8f7;
+  --jp-colourful-tab-sky: #a8d4f0;
   --jp-colourful-tab-lavender: #e5d6f7;
 }
 
-/* Dark theme pastel colours */
+/* Dark theme muted colours */
 [data-jp-theme-light='false'] {
-  --jp-colourful-tab-rose: #5c3a42;
-  --jp-colourful-tab-peach: #5c4a3a;
-  --jp-colourful-tab-lemon: #5c5a3a;
-  --jp-colourful-tab-mint: #3a5c3f;
-  --jp-colourful-tab-sky: #3a4a5c;
-  --jp-colourful-tab-lavender: #4a3a5c;
+  --jp-colourful-tab-rose: #6e4550;
+  --jp-colourful-tab-peach: #6e5a48;
+  --jp-colourful-tab-lemon: #6e6a48;
+  --jp-colourful-tab-mint: #486e4d;
+  --jp-colourful-tab-sky: #48607e;
+  --jp-colourful-tab-lavender: #5a486e;
 }
 
 /* Colour selection menu */
@@ -82,28 +82,52 @@
   background-color: var(--jp-colourful-tab-lavender);
 }
 
-/* Tab colours */
-.jp-colourful-tab-rose {
+/* Tab colours - apply to tab, inner elements, and shadow DOM parts */
+.jp-colourful-tab-rose,
+.jp-colourful-tab-rose * {
+  background-color: var(--jp-colourful-tab-rose) !important;
+}
+.jp-colourful-tab-rose::part(positioning-region) {
   background-color: var(--jp-colourful-tab-rose) !important;
 }
 
-.jp-colourful-tab-peach {
+.jp-colourful-tab-peach,
+.jp-colourful-tab-peach * {
+  background-color: var(--jp-colourful-tab-peach) !important;
+}
+.jp-colourful-tab-peach::part(positioning-region) {
   background-color: var(--jp-colourful-tab-peach) !important;
 }
 
-.jp-colourful-tab-lemon {
+.jp-colourful-tab-lemon,
+.jp-colourful-tab-lemon * {
+  background-color: var(--jp-colourful-tab-lemon) !important;
+}
+.jp-colourful-tab-lemon::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lemon) !important;
 }
 
-.jp-colourful-tab-mint {
+.jp-colourful-tab-mint,
+.jp-colourful-tab-mint * {
+  background-color: var(--jp-colourful-tab-mint) !important;
+}
+.jp-colourful-tab-mint::part(positioning-region) {
   background-color: var(--jp-colourful-tab-mint) !important;
 }
 
-.jp-colourful-tab-sky {
+.jp-colourful-tab-sky,
+.jp-colourful-tab-sky * {
+  background-color: var(--jp-colourful-tab-sky) !important;
+}
+.jp-colourful-tab-sky::part(positioning-region) {
   background-color: var(--jp-colourful-tab-sky) !important;
 }
 
-.jp-colourful-tab-lavender {
+.jp-colourful-tab-lavender,
+.jp-colourful-tab-lavender * {
+  background-color: var(--jp-colourful-tab-lavender) !important;
+}
+.jp-colourful-tab-lavender::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lavender) !important;
 }
 
