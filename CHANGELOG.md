@@ -47,23 +47,42 @@
 
 ## 1.0.3
 
-### Colour Persistence
+### Colour Persistence Across Browser Refresh
 
 - Tab colours now persist across browser refreshes via localStorage
 - Files identified by path extracted from title attribute
 - Terminals identified by session name via `ITerminalTracker`
+- Added `@jupyterlab/terminal` dependency
 - Added cleanup function for colours of closed tabs
 - Renamed colour labels to base colours (Red, Orange, Yellow, Green, Blue, Purple)
+- Adjusted light theme blue (`#a8d4f0`) and dark theme colours for better visibility
 
-## 1.0.0
+## 0.1.12
+
+### Colour Persistence on Tab Switch
+
+- Fixed colours disappearing when switching tabs due to JupyterLab re-rendering
+- Enhanced MutationObserver to watch for class attribute changes on tabs
+- Added 50ms debouncing via `debouncedRefresh()` to batch rapid DOM changes
+- Smart mutation filtering only reacts to relevant tab changes
+
+## 0.1.11
+
+### Tab Colour Application Fix
+
+- Fixed colours not being applied to tabs
+- Refactored to use JupyterLab's `data-id` attribute on tab elements
+- Removed DockPanel import (private API)
+- Stores tab element reference directly from contextmenu event
+
+## 0.1.10
 
 ### Initial Release
 
 - Right-click context menu with "Tab Colour" submenu
 - Six pastel colours: Rose, Peach, Lemon, Mint, Sky, Lavender
 - Theme-aware colours for light and dark modes
-- CSS variable-based colour definitions
-- MutationObserver for colour persistence during tab switches
-- Debounced refresh to prevent excessive DOM operations
+- CSS variable-based colour definitions using `[data-jp-theme-light='false']` selector
+- Removed server extension components (frontend-only)
 
 <!-- <END NEW CHANGELOG ENTRY> -->
