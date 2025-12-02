@@ -71,9 +71,30 @@ function refreshAllTabColours(): void {
   tabColours.forEach((colourIndex, widgetId) => {
     const tabElement = findTabByWidgetId(widgetId);
     if (tabElement) {
-      applyTabColour(tabElement, colourIndex);
+      // Check if colour class is already applied to avoid unnecessary DOM manipulation
+      if (!tabElement.classList.contains(COLOURS[colourIndex].cssClass)) {
+        applyTabColour(tabElement, colourIndex);
+      }
     }
   });
+}
+
+/**
+ * Debounce timer for refresh
+ */
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Debounced refresh to avoid excessive DOM operations
+ */
+function debouncedRefresh(): void {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+  }
+  refreshTimer = setTimeout(() => {
+    refreshAllTabColours();
+    refreshTimer = null;
+  }, 50);
 }
 
 /**
@@ -146,18 +167,41 @@ const plugin: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    // Watch for DOM changes to reapply colours (e.g., when tabs are reordered)
+    // Watch for DOM changes to reapply colours (e.g., when tabs are reordered or classes reset)
     app.restored.then(() => {
-      const observer = new MutationObserver(() => {
-        refreshAllTabColours();
+      const observer = new MutationObserver((mutations) => {
+        // Check if any mutation affects tab elements
+        const affectsTabs = mutations.some(mutation => {
+          // Check for class attribute changes on tabs
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const target = mutation.target as HTMLElement;
+            return target.classList.contains('lm-TabBar-tab');
+          }
+          // Check for child list changes in tab bars
+          if (mutation.type === 'childList') {
+            const target = mutation.target as HTMLElement;
+            return target.classList.contains('lm-TabBar-content') ||
+                   target.closest('.lm-TabBar') !== null;
+          }
+          return false;
+        });
+
+        if (affectsTabs) {
+          debouncedRefresh();
+        }
       });
 
       const dockPanel = document.getElementById('jp-main-dock-panel');
       if (dockPanel) {
         observer.observe(dockPanel, {
           childList: true,
-          subtree: true
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class']
         });
+
+        // Initial application of colours
+        refreshAllTabColours();
       }
     });
   }

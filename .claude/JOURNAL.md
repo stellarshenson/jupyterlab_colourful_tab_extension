@@ -18,3 +18,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 5. **Task - Fix tab colour application**: Debugged and fixed why colours were not being applied to tabs<br>
     **Result**: Root cause was accessing non-existent `app.shell.mainDock.dock` - the `_dockPanel` is private in JupyterLab shell. Refactored `src/index.ts` to use JupyterLab's `data-id` attribute on tab elements (set via `title.dataset.id`). Now stores tab element reference directly, gets widget ID from `tabElement.dataset.id`, and finds tabs via DOM query. Removed DockPanel import. Added console logging for debugging. Extension v0.1.11 applies colours but they disappear on certain actions
+
+6. **Task - Fix colour persistence on tab switch**: Colours were disappearing when switching tabs due to JupyterLab re-rendering<br>
+    **Result**: Enhanced MutationObserver in `src/index.ts` to watch for class attribute changes on tabs (not just childList). Added 50ms debouncing via `debouncedRefresh()` to batch rapid DOM changes. Smart mutation filtering only reacts to relevant tab changes. Added check to avoid redundant DOM manipulation if colour class already applied. Extension v0.1.12 colours now persist when switching tabs
