@@ -15,3 +15,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 4. **Task - Implement context menu submenu**: Added JupyterLab-native context menu with "Tab Colour" submenu for colour selection<br>
     **Result**: Created `schema/plugin.json` with submenu definition using JupyterLab schema system. Registered commands for each colour (Rose, Peach, Lemon, Mint, Sky, Lavender) and Clear option. Fixed command enablement to work with submenu timing. Extension v0.1.10 working with submenu and colour application
+
+5. **Task - Fix tab colour application**: Debugged and fixed why colours were not being applied to tabs<br>
+    **Result**: Root cause was accessing non-existent `app.shell.mainDock.dock` - the `_dockPanel` is private in JupyterLab shell. Refactored `src/index.ts` to use JupyterLab's `data-id` attribute on tab elements (set via `title.dataset.id`). Now stores tab element reference directly, gets widget ID from `tabElement.dataset.id`, and finds tabs via DOM query. Removed DockPanel import. Added console logging for debugging. Extension v0.1.11 applies colours but they disappear on certain actions

@@ -2,7 +2,6 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { DockPanel } from '@lumino/widgets';
 
 /**
  * Colour definitions - CSS classes are defined in style/base.css
@@ -24,9 +23,9 @@ const COLOURS = [
 const tabColours: Map<string, number> = new Map();
 
 /**
- * Currently right-clicked widget ID (set by contextmenu event)
+ * Currently right-clicked tab element (set by contextmenu event)
  */
-let currentWidgetId: string | null = null;
+let currentTabElement: HTMLElement | null = null;
 
 /**
  * Apply colour class to a tab element
@@ -49,76 +48,32 @@ function clearTabColour(tabElement: HTMLElement): void {
 }
 
 /**
+ * Get widget ID from tab element using data-id attribute
+ * JupyterLab stores widget ID in title.dataset.id which renders as data-id
+ */
+function getWidgetIdFromTab(tabElement: HTMLElement): string | null {
+  return tabElement.dataset.id || null;
+}
+
+/**
+ * Find tab element by widget ID using data-id attribute
+ */
+function findTabByWidgetId(widgetId: string): HTMLElement | null {
+  return document.querySelector(
+    `#jp-main-dock-panel .lm-TabBar-tab[data-id="${widgetId}"]`
+  ) as HTMLElement | null;
+}
+
+/**
  * Refresh all tab colours (useful after DOM changes)
  */
-function refreshAllTabColours(app: JupyterFrontEnd): void {
-  const dockPanel = (app.shell as any).mainDock?.dock as DockPanel | undefined;
-  if (!dockPanel) {
-    return;
-  }
-
-  const tabBars = dockPanel.tabBars();
-  for (const tabBar of tabBars) {
-    for (let i = 0; i < tabBar.titles.length; i++) {
-      const widget = tabBar.titles[i].owner;
-      const colourIndex = tabColours.get(widget.id);
-      if (colourIndex !== undefined) {
-        const tabNodes = tabBar.contentNode.querySelectorAll('.lm-TabBar-tab');
-        const tabElement = tabNodes[i] as HTMLElement;
-        if (tabElement) {
-          applyTabColour(tabElement, colourIndex);
-        }
-      }
+function refreshAllTabColours(): void {
+  tabColours.forEach((colourIndex, widgetId) => {
+    const tabElement = findTabByWidgetId(widgetId);
+    if (tabElement) {
+      applyTabColour(tabElement, colourIndex);
     }
-  }
-}
-
-/**
- * Find widget ID from tab element
- */
-function findWidgetFromTab(
-  app: JupyterFrontEnd,
-  tabElement: HTMLElement
-): string | null {
-  const dockPanel = (app.shell as any).mainDock?.dock as DockPanel | undefined;
-  if (!dockPanel) {
-    return null;
-  }
-
-  const tabBars = dockPanel.tabBars();
-  for (const tabBar of tabBars) {
-    const tabNodes = tabBar.contentNode.querySelectorAll('.lm-TabBar-tab');
-    for (let i = 0; i < tabNodes.length; i++) {
-      if (tabNodes[i] === tabElement) {
-        return tabBar.titles[i].owner.id;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Find tab element by widget ID
- */
-function findTabByWidgetId(
-  app: JupyterFrontEnd,
-  widgetId: string
-): HTMLElement | null {
-  const dockPanel = (app.shell as any).mainDock?.dock as DockPanel | undefined;
-  if (!dockPanel) {
-    return null;
-  }
-
-  const tabBars = dockPanel.tabBars();
-  for (const tabBar of tabBars) {
-    for (let i = 0; i < tabBar.titles.length; i++) {
-      if (tabBar.titles[i].owner.id === widgetId) {
-        const tabNodes = tabBar.contentNode.querySelectorAll('.lm-TabBar-tab');
-        return tabNodes[i] as HTMLElement;
-      }
-    }
-  }
-  return null;
+  });
 }
 
 /**
@@ -143,24 +98,32 @@ const plugin: JupyterFrontEndPlugin<void> = {
         const target = event.target as HTMLElement;
         const tabElement = target.closest('.lm-TabBar-tab') as HTMLElement;
         if (tabElement) {
-          currentWidgetId = findWidgetFromTab(app, tabElement);
+          currentTabElement = tabElement;
+          console.log(
+            'Colourful Tab: Right-clicked tab with widget ID:',
+            getWidgetIdFromTab(tabElement)
+          );
         }
-        // Don't reset if not on a tab - keep the last value for the menu
       },
       true // Use capture phase
     );
 
-    // Register colour commands - always enabled since submenu selector handles visibility
+    // Register colour commands
     COLOURS.forEach((colour, index) => {
       commands.addCommand(`colourful-tab:set-${colour.id}`, {
         label: colour.name,
         caption: `Set tab colour to ${colour.name}`,
         execute: () => {
-          if (currentWidgetId) {
-            tabColours.set(currentWidgetId, index);
-            const tabElement = findTabByWidgetId(app, currentWidgetId);
-            if (tabElement) {
-              applyTabColour(tabElement, index);
+          console.log(
+            `Colourful Tab: Setting colour ${colour.name}, currentTabElement:`,
+            currentTabElement
+          );
+          if (currentTabElement) {
+            const widgetId = getWidgetIdFromTab(currentTabElement);
+            if (widgetId) {
+              tabColours.set(widgetId, index);
+              applyTabColour(currentTabElement, index);
+              console.log(`Colourful Tab: Applied ${colour.name} to ${widgetId}`);
             }
           }
         }
@@ -172,27 +135,30 @@ const plugin: JupyterFrontEndPlugin<void> = {
       label: 'Clear',
       caption: 'Remove tab colour',
       execute: () => {
-        if (currentWidgetId) {
-          const tabElement = findTabByWidgetId(app, currentWidgetId);
-          if (tabElement) {
-            clearTabColour(tabElement);
+        if (currentTabElement) {
+          const widgetId = getWidgetIdFromTab(currentTabElement);
+          if (widgetId) {
+            clearTabColour(currentTabElement);
+            tabColours.delete(widgetId);
+            console.log(`Colourful Tab: Cleared colour from ${widgetId}`);
           }
-          tabColours.delete(currentWidgetId);
         }
       }
     });
 
-    // Watch for DOM changes to reapply colours
+    // Watch for DOM changes to reapply colours (e.g., when tabs are reordered)
     app.restored.then(() => {
       const observer = new MutationObserver(() => {
-        refreshAllTabColours(app);
+        refreshAllTabColours();
       });
 
-      const shellNode = app.shell.node;
-      observer.observe(shellNode, {
-        childList: true,
-        subtree: true
-      });
+      const dockPanel = document.getElementById('jp-main-dock-panel');
+      if (dockPanel) {
+        observer.observe(dockPanel, {
+          childList: true,
+          subtree: true
+        });
+      }
     });
   }
 };
