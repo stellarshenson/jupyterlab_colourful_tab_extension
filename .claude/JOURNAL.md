@@ -39,3 +39,9 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 12. **Task - Add theme-aware colour icons to context menu**: Added SVG colour icons next to each colour option in the context menu<br>
     **Result**: Added `@jupyterlab/ui-components` dependency for `LabIcon`. Created `createColourIcon()` function generating SVG with CSS class-based fill. Added CSS rules in `style/base.css` using `var(--jp-colourful-tab-*)` variables so icons automatically switch colours based on theme. Each colour command now has an icon property. Released as v1.0.14
+
+13. **Task - Reinitialize project configuration** (v1.0.16): Updated `.claude/CLAUDE.md` with mandatory bans section and corrected project context<br>
+    **Result**: Added "Mandatory Bans (Reinforced)" section to `.claude/CLAUDE.md` per init-project requirements. Fixed outdated technology stack description - removed reference to "Python server extension" since extension is frontend-only with localStorage persistence. Added extension-specific rules section. Fixed prettier formatting in `package-lock.json` to pass CI lint check
+
+14. **Task - Fix pyproject.toml and update CI/CD** (v1.0.18): Fixed build failure and updated workflows per JUPYTERLAB_EXTENSION.md skill<br>
+    **Result**: Fixed hatchling metadata error "urls cannot be both statically defined and listed in project.dynamic" by removing `urls` from dynamic list and hatch metadata hook fields - static `[project.urls]` section retained. Updated `check-release.yml` and `prep-release.yml` to add `steps_to_skip: "build-changelog"` and `RH_SINCE_LAST_STABLE: 'true'` environment variable per skill requirements for direct commit workflows. Build succeeded, packages created in `dist/` for v1.0.18
