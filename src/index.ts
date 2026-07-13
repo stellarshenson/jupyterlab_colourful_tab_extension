@@ -4,22 +4,10 @@ import {
 } from '@jupyterlab/application';
 import { ITerminalTracker } from '@jupyterlab/terminal';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { COLOURS, setWidgetTabColour } from './colours';
 import { IColourfulTabs } from './tokens';
 
 export { IColourfulTabs } from './tokens';
-
-/**
- * Colour definitions - CSS classes are defined in style/base.css
- * CSS variables handle light/dark theme switching automatically
- */
-const COLOURS = [
-  { name: 'Red', id: 'rose', cssClass: 'jp-colourful-tab-rose' },
-  { name: 'Orange', id: 'peach', cssClass: 'jp-colourful-tab-peach' },
-  { name: 'Yellow', id: 'lemon', cssClass: 'jp-colourful-tab-lemon' },
-  { name: 'Green', id: 'mint', cssClass: 'jp-colourful-tab-mint' },
-  { name: 'Blue', id: 'sky', cssClass: 'jp-colourful-tab-sky' },
-  { name: 'Purple', id: 'lavender', cssClass: 'jp-colourful-tab-lavender' }
-];
 
 /**
  * Create a LabIcon with a coloured square SVG
@@ -405,15 +393,7 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     // title. This rides tab re-renders and stays separate from the menu-driven,
     // localStorage-backed per-tab colours above.
     const api: IColourfulTabs = {
-      setColour(widget, colourId) {
-        if (!widget || widget.isDisposed) {
-          return;
-        }
-        const entry = colourId
-          ? COLOURS.find(c => c.id === colourId)
-          : undefined;
-        widget.title.className = entry ? entry.cssClass : '';
-      }
+      setColour: setWidgetTabColour
     };
 
     return api;

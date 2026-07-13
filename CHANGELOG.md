@@ -2,6 +2,19 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.0.20
+
+### Added
+
+- Public `IColourfulTabs` token so other extensions can tint a widget's dock tab programmatically via `setColour(widget, colourId)`
+- `@lumino/coreutils` dependency and `sharedPackages` federation singleton so the token resolves to one runtime instance across extensions
+- Extension API section in README documenting the token and usage
+- Unit tests for the token id and `setColour` behaviour (id→class mappings, clear on null/unknown, disposed-widget guard)
+
+### Changed
+
+- Extracted `COLOURS` and the tab-tinting logic into `src/colours.ts` (imports only `@lumino/widgets`) to decouple the testable API from the JupyterLab-heavy plugin module
+
 ## 1.0.15
 
 ### Theme-Aware Colour Icons
