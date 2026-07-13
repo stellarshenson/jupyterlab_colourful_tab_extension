@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.4
+
+### Changed
+
+- Maintenance re-release; no functional changes since 1.1.3
+
 ## 1.1.3
 
 ### Fixed
