@@ -160,25 +160,6 @@ function getAllTabsByStableId(): Map<string, HTMLElement> {
 }
 
 /**
- * Clean up colours for tabs that no longer exist
- */
-function cleanupStaleColours(): void {
-  const currentTabs = getAllTabsByStableId();
-  const staleIds: string[] = [];
-
-  tabColours.forEach((_, storedId) => {
-    if (!currentTabs.has(storedId)) {
-      staleIds.push(storedId);
-    }
-  });
-
-  if (staleIds.length > 0) {
-    staleIds.forEach(id => tabColours.delete(id));
-    saveTabColours();
-  }
-}
-
-/**
  * Refresh all tab colours (useful after DOM changes)
  */
 function refreshAllTabColours(): void {
@@ -193,9 +174,6 @@ function refreshAllTabColours(): void {
       applyTabColour(tabElement, colourIndex);
     }
   });
-
-  // Clean up colours for closed tabs
-  cleanupStaleColours();
 }
 
 /**

@@ -2,6 +2,16 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.3
+
+### Fixed
+
+- Tab colours no longer disappear after visiting the JupyterHub control panel and returning to JupyterLab - removed the restore-time cleanup that deleted colours from localStorage before tab identifiers had resolved
+
+### Changed
+
+- Build tooling: adopted the canonical Makefile (v1.34) that uses a project-local `.nodeenv/` instead of overwriting the conda node prefix, fixing intermittent "Text file busy" publish failures
+
 ## 1.0.20
 
 ### Added

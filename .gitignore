@@ -129,3 +129,6 @@ dmypy.json
 
 # test reporter output
 junit.xml
+
+# project-local node environment (Makefile v1.32+)
+.nodeenv/
