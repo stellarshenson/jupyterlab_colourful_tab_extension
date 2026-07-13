@@ -58,3 +58,34 @@ To remove the extension, execute:
 ```bash
 pip uninstall jupyterlab_colourful_tab_extension
 ```
+
+## Extension API
+
+Other extensions can tint a widget's tab programmatically via the public `IColourfulTabs` token.
+
+- Import the token from `jupyterlab_colourful_tab_extension` and request it as an `optional` (or `requires`) plugin dependency
+- Call `setColour(widget, colourId)` where `colourId` is one of `rose`, `peach`, `lemon`, `mint`, `sky`, `lavender`, or `null` to clear
+- The tint rides the widget's Lumino `title.className`, so it survives tab re-renders and reordering with no DOM querying
+- Programmatic colours are independent of the right-click menu's localStorage-persisted colours
+
+```ts
+import {
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin
+} from '@jupyterlab/application';
+import { IColourfulTabs } from 'jupyterlab_colourful_tab_extension';
+
+const plugin: JupyterFrontEndPlugin<void> = {
+  id: 'my_extension:plugin',
+  autoStart: true,
+  optional: [IColourfulTabs],
+  activate: (app: JupyterFrontEnd, colourfulTabs: IColourfulTabs | null) => {
+    if (colourfulTabs) {
+      colourfulTabs.setColour(widget, 'sky');
+    }
+  }
+};
+```
+
+> [!IMPORTANT]
+> The consumer must declare `jupyterlab_colourful_tab_extension` as a shared `singleton` in its `package.json` `jupyterlab.sharedPackages` block (with `"bundled": false`). Without it, module federation serves two copies of the token and the `optional` dependency silently resolves to `null`.

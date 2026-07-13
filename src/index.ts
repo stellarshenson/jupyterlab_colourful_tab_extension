@@ -4,6 +4,9 @@ import {
 } from '@jupyterlab/application';
 import { ITerminalTracker } from '@jupyterlab/terminal';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { IColourfulTabs } from './tokens';
+
+export { IColourfulTabs } from './tokens';
 
 /**
  * Colour definitions - CSS classes are defined in style/base.css
@@ -272,11 +275,12 @@ function applyToolbarColour(): void {
 /**
  * Initialization data for the jupyterlab_colourful_tab_extension extension.
  */
-const plugin: JupyterFrontEndPlugin<void> = {
+const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
   id: 'jupyterlab_colourful_tab_extension:plugin',
   description:
     'JupyterLab extension that makes tabs coloured using pastel colours to help identify them when many are open',
   autoStart: true,
+  provides: IColourfulTabs,
   optional: [ITerminalTracker],
   activate: (app: JupyterFrontEnd, tracker: ITerminalTracker | null) => {
     console.log(
@@ -396,6 +400,23 @@ const plugin: JupyterFrontEndPlugin<void> = {
         applyToolbarColour();
       }
     });
+
+    // Public API: let other extensions tint a widget's dock tab via its Lumino
+    // title. This rides tab re-renders and stays separate from the menu-driven,
+    // localStorage-backed per-tab colours above.
+    const api: IColourfulTabs = {
+      setColour(widget, colourId) {
+        if (!widget || widget.isDisposed) {
+          return;
+        }
+        const entry = colourId
+          ? COLOURS.find(c => c.id === colourId)
+          : undefined;
+        widget.title.className = entry ? entry.cssClass : '';
+      }
+    };
+
+    return api;
   }
 };
 
