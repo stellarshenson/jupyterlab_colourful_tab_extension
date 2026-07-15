@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.8
+
+### Fixed
+
+- A tab tinted through the public `setColour` API (for example by jupyterlab_claude_code_extension when restoring a conversation) now also colours the toolbar strip below it, not just the tab; the toolbar colour is read from the tab's live class so it follows both the right-click menu and the API, instead of only the menu
+
 ## 1.1.7
 
 ### Fixed

@@ -196,7 +196,13 @@ function debouncedRefresh(): void {
 }
 
 /**
- * Apply colour to the active notebook's toolbar based on its tab colour
+ * Apply colour to the active panel's toolbar based on the active tab's colour.
+ *
+ * Reads the colour from the active tab's live class list rather than the
+ * menu-driven `tabColours` map, so the toolbar follows colours set either way:
+ * the right-click menu and the public `setColour` API (used by consumers like
+ * jupyterlab_claude_code_extension) both land as a `jp-colourful-tab-*` class on
+ * the tab element, so a claude_code-tinted tab colours its toolbar too (DEF-3).
  */
 function applyToolbarColour(): void {
   // Find the currently active tab
@@ -207,14 +213,10 @@ function applyToolbarColour(): void {
     return;
   }
 
-  // Get the stable ID for this tab
-  const stableId = getStableTabId(activeTab);
-  if (!stableId) {
-    return;
-  }
-
-  // Get the colour index for this tab
-  const colourIndex = tabColours.get(stableId);
+  // Derive the tab's colour from its live class (covers menu + API colours)
+  const activeColour = COLOURS.find(c =>
+    activeTab.classList.contains(c.cssClass)
+  );
 
   // Find all toolbars and clear their colours first
   const toolbars = document.querySelectorAll('jp-toolbar');
@@ -223,17 +225,13 @@ function applyToolbarColour(): void {
   });
 
   // If the active tab has a colour, apply it to the active panel's toolbar
-  if (
-    colourIndex !== undefined &&
-    colourIndex >= 0 &&
-    colourIndex < COLOURS.length
-  ) {
-    // Find the active panel's toolbar - it's in the currently visible notebook panel
+  if (activeColour) {
+    // Find the active panel's toolbar - it's in the currently visible panel
     const activePanel = document.querySelector(
       '#jp-main-dock-panel .lm-DockPanel-widget:not(.lm-mod-hidden) jp-toolbar'
     );
     if (activePanel) {
-      activePanel.classList.add(COLOURS[colourIndex].cssClass);
+      activePanel.classList.add(activeColour.cssClass);
     }
   }
 }
