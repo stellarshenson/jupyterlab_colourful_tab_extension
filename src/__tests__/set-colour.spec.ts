@@ -36,6 +36,33 @@ describe('setWidgetTabColour', () => {
     expect(widget.title.className).toBe('');
   });
 
+  it('preserves other title classes (e.g. jp-mod-current accent) when tinting', () => {
+    const widget = new Widget();
+    widget.title.className = 'jp-mod-current';
+    setWidgetTabColour(widget, 'sky');
+    const tokens = widget.title.className.split(/\s+/).filter(Boolean);
+    expect(tokens).toContain('jp-mod-current');
+    expect(tokens).toContain('jp-colourful-tab-sky');
+  });
+
+  it('swaps the colour token without dropping other classes', () => {
+    const widget = new Widget();
+    widget.title.className = 'jp-mod-current jp-colourful-tab-sky';
+    setWidgetTabColour(widget, 'rose');
+    const tokens = widget.title.className.split(/\s+/).filter(Boolean);
+    expect(tokens).toContain('jp-mod-current');
+    expect(tokens).toContain('jp-colourful-tab-rose');
+    expect(tokens).not.toContain('jp-colourful-tab-sky');
+  });
+
+  it('clearing removes only the colour token, keeping other classes', () => {
+    const widget = new Widget();
+    widget.title.className = 'jp-mod-current jp-colourful-tab-mint';
+    setWidgetTabColour(widget, null);
+    const tokens = widget.title.className.split(/\s+/).filter(Boolean);
+    expect(tokens).toEqual(['jp-mod-current']);
+  });
+
   it('leaves the className untouched on a disposed widget', () => {
     // Only isDisposed and title.className are read, so a minimal stand-in lets
     // us assert the guard directly without Lumino's dispose() clearing the title.

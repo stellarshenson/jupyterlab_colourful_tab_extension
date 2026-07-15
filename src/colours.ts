@@ -28,5 +28,17 @@ export function setWidgetTabColour(
     return;
   }
   const entry = colourId ? COLOURS.find(c => c.id === colourId) : undefined;
-  widget.title.className = entry ? entry.cssClass : '';
+  // Preserve every other class on the Lumino title - the shell stores the
+  // selected-tab accent as `jp-mod-current` (and `jp-mod-active`) on this same
+  // property. Only swap our own colour token; overwriting title.className
+  // wholesale destroys those sibling classes and makes the accent bar vanish
+  // (DEF-1) whenever a consumer re-applies the colour.
+  const colourClasses = new Set(COLOURS.map(c => c.cssClass));
+  const tokens = (widget.title.className || '')
+    .split(/\s+/)
+    .filter(token => token && !colourClasses.has(token));
+  if (entry) {
+    tokens.push(entry.cssClass);
+  }
+  widget.title.className = tokens.join(' ');
 }

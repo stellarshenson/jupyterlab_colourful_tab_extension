@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.6
+
+### Fixed
+
+- Selected-tab accent bar no longer disappears on coloured tabs - the public `setColour` API now preserves the shell's `jp-mod-current` current-tab class (and any other tab title class) instead of overwriting it, so a tab tinted by another extension keeps its selection accent when re-tinted
+
 ## 1.1.5
 
 ### Added

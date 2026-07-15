@@ -25,6 +25,8 @@ The selected dock tab (`.lm-mod-current`) carrying a colour class renders a dist
   - log: 2026-07-15 verified
 - [x] **Design decision: dark active is darker (recedes toward chrome)** - dark-theme active shade is deliberately darker than the base per explicit request; UX/contrast review flagged this as inverting the usual "current tab advances" cue (active fill 1.2-1.66:1 vs dark chrome, inactive base tabs pop more) but legibility stays safe (light-text contrast improves on selection); intentional - do not silently flip to lighter
   - log: 2026-07-15 kept darker per user decision after adversarial UX review
+- [ ] **Accent preserved on API tint** - applying or clearing a colour via the public `setColour` API preserves the shell's `jp-mod-current` accent class (and any other `title.className` token); only the `jp-colourful-tab-*` token is swapped, so the selected-tab accent bar survives consumer re-tints (DEF-1)
+  - log: 2026-07-15 fixed - `setWidgetTabColour` tokenises `title.className` instead of overwriting it; unit-tested, runtime confirmation pending
 - [ ] **Inactive unchanged** - a coloured tab without `.lm-mod-current` keeps its base shade
   - log: 2026-07-15 implemented, pending runtime verification
 - [ ] **Visual dark** - selected coloured tab renders visibly darker than its inactive siblings in the dark theme
