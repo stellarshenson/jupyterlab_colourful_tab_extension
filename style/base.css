@@ -153,6 +153,48 @@
   background-color: var(--jp-colourful-tab-lavender) !important;
 }
 
+/* Active widget's toolbar - matches the active tab's distinct shade.
+   applyToolbarColour only ever tints the visible (current) panel's toolbar,
+   so a coloured jp-toolbar is always the active one. Scoped to jp-toolbar so it
+   overrides the base ::part shade for the toolbar without touching tabs, keeping
+   the strip below the active tab the same shade as the tab (regression from the
+   1.1.5 active-tab shade, which moved the tab but left the toolbar on base). */
+jp-toolbar.jp-colourful-tab-rose,
+jp-toolbar.jp-colourful-tab-rose *,
+jp-toolbar.jp-colourful-tab-rose::part(positioning-region) {
+  background-color: var(--jp-colourful-tab-rose-active) !important;
+}
+
+jp-toolbar.jp-colourful-tab-peach,
+jp-toolbar.jp-colourful-tab-peach *,
+jp-toolbar.jp-colourful-tab-peach::part(positioning-region) {
+  background-color: var(--jp-colourful-tab-peach-active) !important;
+}
+
+jp-toolbar.jp-colourful-tab-lemon,
+jp-toolbar.jp-colourful-tab-lemon *,
+jp-toolbar.jp-colourful-tab-lemon::part(positioning-region) {
+  background-color: var(--jp-colourful-tab-lemon-active) !important;
+}
+
+jp-toolbar.jp-colourful-tab-mint,
+jp-toolbar.jp-colourful-tab-mint *,
+jp-toolbar.jp-colourful-tab-mint::part(positioning-region) {
+  background-color: var(--jp-colourful-tab-mint-active) !important;
+}
+
+jp-toolbar.jp-colourful-tab-sky,
+jp-toolbar.jp-colourful-tab-sky *,
+jp-toolbar.jp-colourful-tab-sky::part(positioning-region) {
+  background-color: var(--jp-colourful-tab-sky-active) !important;
+}
+
+jp-toolbar.jp-colourful-tab-lavender,
+jp-toolbar.jp-colourful-tab-lavender *,
+jp-toolbar.jp-colourful-tab-lavender::part(positioning-region) {
+  background-color: var(--jp-colourful-tab-lavender-active) !important;
+}
+
 /* Active (selected) tab - distinct shade so the selected tab stands out.
    Darker in the dark theme, brighter/more saturated in the light theme. */
 .lm-mod-current.jp-colourful-tab-rose,

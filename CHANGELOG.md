@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.7
+
+### Fixed
+
+- The current tab's toolbar (the coloured strip directly below the tab) again matches the tab's colour - a regression from 1.1.5, which gave the selected tab a distinct shade but left its toolbar on the base shade, so the strip below the active tab looked uncoloured; the toolbar now takes the same active shade as its tab
+
 ## 1.1.6
 
 ### Fixed

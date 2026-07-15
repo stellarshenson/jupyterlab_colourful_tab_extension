@@ -19,6 +19,7 @@ The selected dock tab (`.lm-mod-current`) carrying a colour class renders a dist
 - [x] **Coverage** - each active rule covers the tab element and its descendants (`*`); no `::part(positioning-region)` rule (dead for the active state - only web-component toolbars expose that part and they never carry `.lm-mod-current`)
   - log: 2026-07-15 implemented
   - log: 2026-07-15 removed dead active `::part` rules after CSS-correctness adversarial review
+  - log: 2026-07-15 correction - the removed rules were dead (toolbar never carries `.lm-mod-current`), but dropping toolbar handling entirely left the current widget's toolbar on the base shade (DEF-2); the toolbar now gets the active shade via `jp-toolbar`-scoped rules instead of `.lm-mod-current` ones
 - [x] **Specificity** - active selector (2 classes) overrides the base colour rule (1 class); both `!important`, so the current tab resolves to the active shade
   - log: 2026-07-15 implemented
 - [x] **Build and lint** - `jlpm build` compiles and `jlpm run lint:check` (stylelint + prettier + eslint) passes with the new rules
@@ -27,6 +28,8 @@ The selected dock tab (`.lm-mod-current`) carrying a colour class renders a dist
   - log: 2026-07-15 kept darker per user decision after adversarial UX review
 - [ ] **Accent preserved on API tint** - applying or clearing a colour via the public `setColour` API preserves the shell's `jp-mod-current` accent class (and any other `title.className` token); only the `jp-colourful-tab-*` token is swapped, so the selected-tab accent bar survives consumer re-tints (DEF-1)
   - log: 2026-07-15 fixed - `setWidgetTabColour` tokenises `title.className` instead of overwriting it; unit-tested, runtime confirmation pending
+- [ ] **Toolbar matches active shade** - the current widget's `jp-toolbar` (the `::part(positioning-region)` strip below the tab) renders the `-active` shade so it matches the active tab, not the base shade; `jp-toolbar`-scoped rules override the base `::part` rule without affecting tabs (DEF-2)
+  - log: 2026-07-15 fixed - added six `jp-toolbar.jp-colourful-tab-<id>` `-active` rules; runtime confirmation pending
 - [ ] **Inactive unchanged** - a coloured tab without `.lm-mod-current` keeps its base shade
   - log: 2026-07-15 implemented, pending runtime verification
 - [ ] **Visual dark** - selected coloured tab renders visibly darker than its inactive siblings in the dark theme
