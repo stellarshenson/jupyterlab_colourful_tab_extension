@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.5
+
+### Added
+
+- Selected (active) dock tab now renders a distinct shade of its colour - brighter/more saturated in the light theme, darker in the dark theme - so the current coloured tab stands out from inactive coloured tabs
+
 ## 1.1.4
 
 ### Changed

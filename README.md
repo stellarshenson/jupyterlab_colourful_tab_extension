@@ -33,6 +33,7 @@ Assign colours to tabs via right-click context menu for easy visual identificati
 **Key features**:
 
 - Right-click any tab to assign a colour from the "Set Tab Colour" submenu
+- Selected (active) tab shows a distinct shade of its colour so it stands out from other coloured tabs
 - Colours persist across browser refreshes via localStorage
 - Notebook toolbar matches the active tab colour
 - Automatic cleanup when tabs are closed

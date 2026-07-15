@@ -11,6 +11,14 @@
   --jp-colourful-tab-mint: #c8f7c5;
   --jp-colourful-tab-sky: #a8d4f0;
   --jp-colourful-tab-lavender: #e5d6f7;
+
+  /* Brighter, more saturated shades for the active (selected) tab */
+  --jp-colourful-tab-rose-active: #ff9db5;
+  --jp-colourful-tab-peach-active: #ffbe80;
+  --jp-colourful-tab-lemon-active: #fff176;
+  --jp-colourful-tab-mint-active: #8ff08a;
+  --jp-colourful-tab-sky-active: #6ec1f5;
+  --jp-colourful-tab-lavender-active: #c39bf5;
 }
 
 /* Dark theme muted colours */
@@ -21,6 +29,14 @@
   --jp-colourful-tab-mint: #3a5a3f;
   --jp-colourful-tab-sky: #2e4258;
   --jp-colourful-tab-lavender: #4a3a5a;
+
+  /* Darker shades for the active (selected) tab */
+  --jp-colourful-tab-rose-active: #43282e;
+  --jp-colourful-tab-peach-active: #43382c;
+  --jp-colourful-tab-lemon-active: #43402b;
+  --jp-colourful-tab-mint-active: #2a4430;
+  --jp-colourful-tab-sky-active: #213040;
+  --jp-colourful-tab-lavender-active: #372b43;
 }
 
 /* Colour selection menu */
@@ -135,6 +151,38 @@
 
 .jp-colourful-tab-lavender::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lavender) !important;
+}
+
+/* Active (selected) tab - distinct shade so the selected tab stands out.
+   Darker in the dark theme, brighter/more saturated in the light theme. */
+.lm-mod-current.jp-colourful-tab-rose,
+.lm-mod-current.jp-colourful-tab-rose * {
+  background-color: var(--jp-colourful-tab-rose-active) !important;
+}
+
+.lm-mod-current.jp-colourful-tab-peach,
+.lm-mod-current.jp-colourful-tab-peach * {
+  background-color: var(--jp-colourful-tab-peach-active) !important;
+}
+
+.lm-mod-current.jp-colourful-tab-lemon,
+.lm-mod-current.jp-colourful-tab-lemon * {
+  background-color: var(--jp-colourful-tab-lemon-active) !important;
+}
+
+.lm-mod-current.jp-colourful-tab-mint,
+.lm-mod-current.jp-colourful-tab-mint * {
+  background-color: var(--jp-colourful-tab-mint-active) !important;
+}
+
+.lm-mod-current.jp-colourful-tab-sky,
+.lm-mod-current.jp-colourful-tab-sky * {
+  background-color: var(--jp-colourful-tab-sky-active) !important;
+}
+
+.lm-mod-current.jp-colourful-tab-lavender,
+.lm-mod-current.jp-colourful-tab-lavender * {
+  background-color: var(--jp-colourful-tab-lavender-active) !important;
 }
 
 .jp-colourful-tab-menu-clear {
