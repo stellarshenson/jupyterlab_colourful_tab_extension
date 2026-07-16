@@ -23,12 +23,12 @@
 
 /* Dark theme muted colours */
 [data-jp-theme-light='false'] {
-  --jp-colourful-tab-rose: #5a3840;
-  --jp-colourful-tab-peach: #5a4a3a;
-  --jp-colourful-tab-lemon: #5a563a;
-  --jp-colourful-tab-mint: #3a5a3f;
-  --jp-colourful-tab-sky: #2e4258;
-  --jp-colourful-tab-lavender: #4a3a5a;
+  --jp-colourful-tab-rose: #4e3138;
+  --jp-colourful-tab-peach: #4e4032;
+  --jp-colourful-tab-lemon: #4e4b32;
+  --jp-colourful-tab-mint: #324e37;
+  --jp-colourful-tab-sky: #28394d;
+  --jp-colourful-tab-lavender: #40324e;
 
   /* Darker shades for the active (selected) tab */
   --jp-colourful-tab-rose-active: #43282e;

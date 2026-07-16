@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.11
+
+### Changed
+
+- Darkened the dark-theme inactive (base) tab colours by about 13% (e.g. rose `#5a3840` to `#4e3138`) - they were too bright next to the dark chrome; the active (selected) shades are unchanged and remain visibly darker than the new base, preserving the selected-tab distinction
+
 ## 1.1.10
 
 ### Fixed
