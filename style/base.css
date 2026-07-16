@@ -31,12 +31,12 @@
   --jp-colourful-tab-lavender: #40324e;
 
   /* Darker shades for the active (selected) tab */
-  --jp-colourful-tab-rose-active: #43282e;
-  --jp-colourful-tab-peach-active: #43382c;
-  --jp-colourful-tab-lemon-active: #43402b;
-  --jp-colourful-tab-mint-active: #2a4430;
-  --jp-colourful-tab-sky-active: #213040;
-  --jp-colourful-tab-lavender-active: #372b43;
+  --jp-colourful-tab-rose-active: #3a2328;
+  --jp-colourful-tab-peach-active: #3a3126;
+  --jp-colourful-tab-lemon-active: #3a3825;
+  --jp-colourful-tab-mint-active: #253b2a;
+  --jp-colourful-tab-sky-active: #1d2a38;
+  --jp-colourful-tab-lavender-active: #30253a;
 }
 
 /* Colour selection menu */

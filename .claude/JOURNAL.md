@@ -75,3 +75,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 24. **Task [Short] - Darken dark-theme inactive colours** (v1.1.11): user found inactive tab colours too bright in dark mode<br>
     **Result**: darkened the six base `--jp-colourful-tab-<id>` dark-theme values ~13% in `style/base.css` (e.g. rose `#5a3840` -> `#4e3138`), keeping them visibly lighter than the `-active` shades; lint clean
+
+25. **Task [Short] - Darken dark-theme active shades** (v1.1.12): follow-up to entry 24 - selected tab too, same treatment<br>
+    **Result**: darkened the six `-active` dark-theme values ~13% in `style/base.css` (e.g. rose `#43282e` -> `#3a2328`), keeping the base/active gap proportionally identical; lint clean

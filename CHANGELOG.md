@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.12
+
+### Changed
+
+- Darkened the dark-theme active (selected) tab shades by the same ~13% as the 1.1.11 base colours (e.g. rose `#43282e` to `#3a2328`), so the selected tab keeps its familiar darker-than-siblings contrast against the newly darkened inactive tabs
+
 ## 1.1.11
 
 ### Changed
