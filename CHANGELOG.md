@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.9
+
+### Fixed
+
+- Tab colours no longer bleed onto other panels in split layouts - the toolbar strip is now paired with its own panel's current tab (matched via the shared widget id), so a coloured tab in one split never paints the toolbar of a different widget; previously an API-tinted terminal (which has no toolbar of its own) always painted its colour onto another panel's toolbar, e.g. the notebook beside it
+
 ## 1.1.8
 
 ### Fixed

@@ -32,6 +32,8 @@ The selected dock tab (`.lm-mod-current`) carrying a colour class renders a dist
   - log: 2026-07-15 fixed - added six `jp-toolbar.jp-colourful-tab-<id>` `-active` rules; runtime confirmation pending
 - [ ] **Toolbar follows API colours** - a tab tinted via the public `setColour` API (not just the right-click menu) also colours its toolbar; `applyToolbarColour` reads the colour from the active tab's live `classList`, which both paths set, not from the menu-only `tabColours` map (DEF-3)
   - log: 2026-07-15 fixed - `applyToolbarColour` derives colour from the tab class; runtime confirmation pending
+- [ ] **Toolbar pairs with its own panel** - in split layouts each panel's toolbar takes the colour of that panel's own current tab, matched via the shared widget id (tab `data-id` = widget node `id`); a coloured tab never paints another panel's toolbar, and widgets without a toolbar (terminals) colour nothing (DEF-4)
+  - log: 2026-07-16 fixed - `applyToolbarColour` pairs each current tab with its own widget's toolbar; runtime confirmation pending
 - [ ] **Inactive unchanged** - a coloured tab without `.lm-mod-current` keeps its base shade
   - log: 2026-07-15 implemented, pending runtime verification
 - [ ] **Visual dark** - selected coloured tab renders visibly darker than its inactive siblings in the dark theme

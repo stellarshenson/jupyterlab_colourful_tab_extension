@@ -196,44 +196,43 @@ function debouncedRefresh(): void {
 }
 
 /**
- * Apply colour to the active panel's toolbar based on the active tab's colour.
+ * Apply colour to each panel's toolbar based on that panel's current tab.
  *
- * Reads the colour from the active tab's live class list rather than the
- * menu-driven `tabColours` map, so the toolbar follows colours set either way:
- * the right-click menu and the public `setColour` API (used by consumers like
- * jupyterlab_claude_code_extension) both land as a `jp-colourful-tab-*` class on
- * the tab element, so a claude_code-tinted tab colours its toolbar too (DEF-3).
+ * Reads the colour from the tab's live class list rather than the menu-driven
+ * `tabColours` map, so the toolbar follows colours set either way: the
+ * right-click menu and the public `setColour` API (used by consumers like
+ * jupyterlab_claude_code_extension) both land as a `jp-colourful-tab-*` class
+ * on the tab element (DEF-3). Split layouts have one current tab per tab bar,
+ * so each tab is paired with its OWN widget's toolbar via the shared widget id
+ * (the shell sets tab `data-id` to the widget id, and Lumino's `Widget.id` is
+ * the widget node's DOM id) - a colour never leaks onto another panel's
+ * toolbar, and widgets without a toolbar (e.g. terminals) colour none (DEF-4).
  */
 function applyToolbarColour(): void {
-  // Find the currently active tab
-  const activeTab = document.querySelector(
-    '#jp-main-dock-panel .lm-TabBar-tab.lm-mod-current'
-  ) as HTMLElement;
-  if (!activeTab) {
-    return;
-  }
-
-  // Derive the tab's colour from its live class (covers menu + API colours)
-  const activeColour = COLOURS.find(c =>
-    activeTab.classList.contains(c.cssClass)
-  );
-
-  // Find all toolbars and clear their colours first
+  // Clear all toolbar colours first
   const toolbars = document.querySelectorAll('jp-toolbar');
   toolbars.forEach(toolbar => {
     COLOURS.forEach(c => toolbar.classList.remove(c.cssClass));
   });
 
-  // If the active tab has a colour, apply it to the active panel's toolbar
-  if (activeColour) {
-    // Find the active panel's toolbar - it's in the currently visible panel
-    const activePanel = document.querySelector(
-      '#jp-main-dock-panel .lm-DockPanel-widget:not(.lm-mod-hidden) jp-toolbar'
-    );
-    if (activePanel) {
-      activePanel.classList.add(activeColour.cssClass);
+  // Colour each panel's toolbar from its own current tab
+  const currentTabs = document.querySelectorAll(
+    '#jp-main-dock-panel .lm-TabBar-tab.lm-mod-current'
+  );
+  currentTabs.forEach(tab => {
+    const tabElement = tab as HTMLElement;
+    const colour = COLOURS.find(c => tabElement.classList.contains(c.cssClass));
+    const widgetId = tabElement.dataset.id;
+    if (!colour || !widgetId) {
+      return;
     }
-  }
+    const toolbar = document
+      .getElementById(widgetId)
+      ?.querySelector('jp-toolbar');
+    if (toolbar) {
+      toolbar.classList.add(colour.cssClass);
+    }
+  });
 }
 
 /**
