@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.10
+
+### Fixed
+
+- API-tinted tabs no longer flicker between two colours - the stored right-click menu colours never overwrite a tab that already shows a colour, and setting a colour through the public `setColour` API now removes any stored menu colour for that tab; previously a stale menu colour saved under a reused terminal session name kept fighting the API colour on every tab update (visible as e.g. brown/blue flicker) and attached itself to new terminals the user never coloured
+
 ## 1.1.9
 
 ### Fixed

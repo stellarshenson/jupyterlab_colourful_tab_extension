@@ -160,7 +160,16 @@ function getAllTabsByStableId(): Map<string, HTMLElement> {
 }
 
 /**
- * Refresh all tab colours (useful after DOM changes)
+ * Refresh all tab colours (useful after DOM changes).
+ *
+ * Only paints a stored menu colour onto a tab that currently has NO colour
+ * class at all. A tab already showing a colour may be rendering the public
+ * `setColour` API's colour (carried in `title.className`), and overwriting it
+ * here starts an endless fight: this map repaints on every mutation while
+ * Lumino re-renders the title colour on every tab update - the tab visibly
+ * flickers between the two colours (DEF-5). Stale map entries (terminal
+ * session names are reused by the server) made this hit tabs the user never
+ * coloured.
  */
 function refreshAllTabColours(): void {
   const currentTabs = getAllTabsByStableId();
@@ -169,11 +178,31 @@ function refreshAllTabColours(): void {
     const tabElement = currentTabs.get(storedId);
     if (
       tabElement &&
-      !tabElement.classList.contains(COLOURS[colourIndex].cssClass)
+      !COLOURS.some(c => tabElement.classList.contains(c.cssClass))
     ) {
       applyTabColour(tabElement, colourIndex);
     }
   });
+}
+
+/**
+ * Drop the stored menu colour for a widget's tab when the public API takes
+ * ownership of it. Without this, a stale localStorage entry under the same
+ * stable id (terminal session names are reused) keeps fighting the API colour
+ * and resurfaces whenever the API colour is cleared (DEF-5).
+ */
+function releaseMenuColour(widgetId: string): void {
+  const tabElement = document.querySelector(
+    `#jp-main-dock-panel .lm-TabBar-tab[data-id="${CSS.escape(widgetId)}"]`
+  ) as HTMLElement | null;
+  if (!tabElement) {
+    return;
+  }
+  const stableId = getStableTabId(tabElement);
+  if (stableId && tabColours.has(stableId)) {
+    tabColours.delete(stableId);
+    saveTabColours();
+  }
 }
 
 /**
@@ -368,7 +397,14 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     // title. This rides tab re-renders and stays separate from the menu-driven,
     // localStorage-backed per-tab colours above.
     const api: IColourfulTabs = {
-      setColour: setWidgetTabColour
+      setColour: (widget, colourId) => {
+        if (colourId && widget && !widget.isDisposed) {
+          // The API takes ownership of this tab's colour - drop any stored
+          // menu colour so the two paths stop fighting over the tab (DEF-5)
+          releaseMenuColour(widget.id);
+        }
+        setWidgetTabColour(widget, colourId);
+      }
     };
 
     return api;
