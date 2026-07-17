@@ -35,8 +35,8 @@ export function contrastRatio(hexA: string, hexB: string): number {
 /**
  * The greyscale stroke for the 1px seam between two adjacent tabs of the same
  * colour - without it the tabs fuse into one block. The grey must reach the
- * target ratio against EVERY given background because either neighbour may be
- * the current tab, so both the inactive and active shades are passed in.
+ * target ratio against EVERY given background; the caller passes whichever
+ * shades the seam can actually touch.
  *
  * Scans grey levels toward the extreme and returns the FIRST level that sits
  * on the required side of every background (lower luminance for 'darker',
@@ -47,12 +47,15 @@ export function contrastRatio(hexA: string, hexB: string): number {
  *
  * @param backgrounds - `#rrggbb` shades the seam must contrast with
  * @param direction - 'darker' for light themes, 'brighter' for dark themes
- * @param target - required contrast ratio, default 4.0 (WCAG non-text is 3:1)
+ * @param target - required contrast ratio (WCAG non-text minimum is 3:1);
+ *   always passed explicitly - the magnitude-to-ratio mapping lives in one
+ *   place, CONTRAST_TARGETS in dynamicStyle.ts, and a default here would be
+ *   a second, driftable copy of it
  */
 export function dividerGrey(
   backgrounds: string[],
   direction: 'darker' | 'brighter',
-  target: number = 4.0
+  target: number
 ): string {
   // contrast alone is not enough: a palette that contradicts the theme (dark
   // shades in the light theme) would pass the target from the wrong side, so

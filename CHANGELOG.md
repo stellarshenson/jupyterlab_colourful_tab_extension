@@ -2,6 +2,16 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.15
+
+### Added
+
+- Divider contrast setting (`dividerContrast`): low targets 3:1 (the WCAG non-text minimum, subtlest line), medium 4:1 (the previous fixed behaviour, still the default), high 6:1 (strongest separation). Selectable in the Settings Editor next to the divider toggle; divider greys are recomputed live from the chosen magnitude and the palette
+
+### Fixed
+
+- The divider no longer recolours a seam that touches the selected (active) tab - the active tab is already distinguished by its own distinct shade, so the grey belongs only between two inactive same-coloured tabs; pairs involving the active tab keep the theme's default seam. Divider greys are now computed against the inactive shade only, giving slightly subtler lines
+
 ## 1.1.14
 
 ### Added

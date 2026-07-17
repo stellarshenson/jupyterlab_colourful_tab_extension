@@ -33,6 +33,13 @@
       "type": "boolean",
       "default": true
     },
+    "dividerContrast": {
+      "title": "Divider contrast",
+      "description": "Strength of the divider grey between adjacent same-coloured tabs: low targets 3:1 (the WCAG non-text minimum, subtlest line), medium 4:1, high 6:1 (strongest separation).",
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "default": "medium"
+    },
     "palette": {
       "title": "Tab colour palette",
       "description": "Inactive and active shades per colour name, for the light and dark themes. Hex format #rrggbb. Divider greys are recomputed automatically from these values.",

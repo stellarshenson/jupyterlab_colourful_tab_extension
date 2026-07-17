@@ -8,6 +8,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { COLOURS, setWidgetTabColour } from './colours';
 import {
   applyDynamicStyle,
+  asDividerContrast,
   buildDynamicCss,
   mergePalette
 } from './dynamicStyle';
@@ -319,7 +320,8 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
             applyDynamicStyle(
               buildDynamicCss(
                 mergePalette(settings.composite.palette),
-                settings.composite.dynamicDivider !== false
+                settings.composite.dynamicDivider !== false,
+                asDividerContrast(settings.composite.dividerContrast)
               )
             );
           };

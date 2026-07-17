@@ -30,7 +30,7 @@ describe('dividerGrey', () => {
   it('finds the lightest dark grey passing against both rose shades', () => {
     // both shades constrain the seam: either neighbour may be the active tab
     const shades = ['#ffd6e0', '#ff9db5'];
-    const grey = dividerGrey(shades, 'darker');
+    const grey = dividerGrey(shades, 'darker', 4.0);
     shades.forEach(bg => {
       expect(contrastRatio(grey, bg)).toBeGreaterThanOrEqual(4.0);
     });
@@ -41,7 +41,7 @@ describe('dividerGrey', () => {
 
   it('finds the dimmest bright grey passing against both lemon shades', () => {
     const shades = ['#4e4b32', '#3a3825'];
-    const grey = dividerGrey(shades, 'brighter');
+    const grey = dividerGrey(shades, 'brighter', 4.0);
     shades.forEach(bg => {
       expect(contrastRatio(grey, bg)).toBeGreaterThanOrEqual(4.0);
     });
@@ -52,9 +52,9 @@ describe('dividerGrey', () => {
   it('stays on the required side for palettes that contradict the theme', () => {
     // dark shades under 'darker' must not flip to a bright grey (and vice
     // versa) just because the opposite side reaches the contrast target first
-    const dark = dividerGrey(['#202020', '#101010'], 'darker');
+    const dark = dividerGrey(['#202020', '#101010'], 'darker', 4.0);
     expect(relativeLuminance(dark)).toBeLessThan(relativeLuminance('#101010'));
-    const bright = dividerGrey(['#e0e0e0'], 'brighter');
+    const bright = dividerGrey(['#e0e0e0'], 'brighter', 4.0);
     expect(relativeLuminance(bright)).toBeGreaterThan(
       relativeLuminance('#e0e0e0')
     );
@@ -67,7 +67,7 @@ describe('dividerGrey', () => {
   });
 
   it('always returns a lowercase greyscale hex', () => {
-    const grey = dividerGrey(['#c8f7c5', '#8ff08a'], 'darker');
+    const grey = dividerGrey(['#c8f7c5', '#8ff08a'], 'darker', 4.0);
     expect(grey).toMatch(/^#[0-9a-f]{6}$/);
     expect(grey.slice(1, 3)).toEqual(grey.slice(3, 5));
     expect(grey.slice(3, 5)).toEqual(grey.slice(5, 7));

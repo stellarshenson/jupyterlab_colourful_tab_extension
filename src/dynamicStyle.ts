@@ -32,6 +32,36 @@ const COLOUR_IDS = COLOURS.map(c => c.id);
 /** A user-supplied colour is accepted only as a 6-digit hex string. */
 const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
+/** Divider contrast magnitude selectable in settings. */
+export type DividerContrast = 'low' | 'medium' | 'high';
+
+/**
+ * Target contrast ratio per magnitude. low is the WCAG non-text minimum
+ * (subtlest line), medium the original 4.0:1 default, high a strong
+ * separation. Must stay identical to the dividerContrast enum in
+ * schema/plugin.json - the anti-drift test pins the two together.
+ */
+export const CONTRAST_TARGETS: { [K in DividerContrast]: number } = {
+  low: 3.0,
+  medium: 4.0,
+  high: 6.0
+};
+
+/**
+ * The value if it is a known contrast magnitude, otherwise 'medium'. Guards
+ * the raw settings value the same way mergePalette guards the palette.
+ * Membership is derived from CONTRAST_TARGETS so a new magnitude added there
+ * is accepted without touching this guard.
+ *
+ * @param value - the raw dividerContrast value from the setting registry
+ */
+export function asDividerContrast(value: unknown): DividerContrast {
+  return typeof value === 'string' &&
+    Object.prototype.hasOwnProperty.call(CONTRAST_TARGETS, value)
+    ? (value as DividerContrast)
+    : 'medium';
+}
+
 /** The id of the injected <style> element. */
 const STYLE_ID = 'jp-colourful-tab-dynamic-style';
 
@@ -114,13 +144,16 @@ function variableBlock(selector: string, palette: ThemePalette): string {
 /**
  * The two divider rules for one colour's same-colour adjacency.
  *
- * The seam between adjacent tabs is normally the previous tab's border-right,
- * but when the next tab is .lm-mod-current its border-left wins - so both
- * sides get the grey to cover every adjacency case. Only the colour is
- * overridden; the theme keeps the border width and style.
+ * Only pairs of INACTIVE tabs get the grey: the active tab is already
+ * distinguished by its distinct -active shade, so a seam against it is
+ * redundant (DEF-7) - :not(.lm-mod-current) on both neighbours leaves any
+ * pair involving the current tab on the theme's default seam. Between two
+ * inactive tabs the seam is the previous tab's border-right, but both sides
+ * get the grey so the outcome does not hinge on which border wins the paint.
+ * Only the colour is overridden; the theme keeps the border width and style.
  */
 function dividerRules(id: string, grey: string, prefix: string): string {
-  const tab = `.lm-TabBar-tab.jp-colourful-tab-${id}`;
+  const tab = `.lm-TabBar-tab.jp-colourful-tab-${id}:not(.lm-mod-current)`;
   return [
     `${prefix}${tab}:has(+ ${tab}) { border-right-color: ${grey} !important; }`,
     `${prefix}${tab} + ${tab} { border-left-color: ${grey} !important; }`
@@ -133,34 +166,36 @@ function dividerRules(id: string, grey: string, prefix: string): string {
  *
  * The divider grey is computed from the palette at runtime (never hardcoded)
  * so user palette edits keep their contrast: darker than the tab colour in the
- * light theme, brighter in the dark theme, targeting 4.0:1 against both the
- * inactive and active shades since either neighbour can be the current tab.
+ * light theme, brighter in the dark theme, targeting the configured ratio
+ * (CONTRAST_TARGETS[contrast]) against the inactive shade only - the divider
+ * separates pairs of inactive tabs, never the active tab (DEF-7).
  *
  * @param palette - the merged palette to emit
  * @param dynamicDivider - whether to emit the divider rules
+ * @param contrast - divider contrast magnitude; default 'medium' (4.0:1)
  */
 export function buildDynamicCss(
   palette: IPalette,
-  dynamicDivider: boolean
+  dynamicDivider: boolean,
+  contrast: DividerContrast = 'medium'
 ): string {
   const darkSelector = "[data-jp-theme-light='false']";
+  const target = CONTRAST_TARGETS[contrast];
   const blocks = [
     variableBlock(':root', palette.light),
     variableBlock(darkSelector, palette.dark)
   ];
   if (dynamicDivider) {
     for (const id of COLOUR_IDS) {
-      const light = palette.light[id];
-      const dark = palette.dark[id];
       blocks.push(
         dividerRules(
           id,
-          dividerGrey([light.inactive, light.active], 'darker'),
+          dividerGrey([palette.light[id].inactive], 'darker', target),
           ''
         ),
         dividerRules(
           id,
-          dividerGrey([dark.inactive, dark.active], 'brighter'),
+          dividerGrey([palette.dark[id].inactive], 'brighter', target),
           `${darkSelector} `
         )
       );
