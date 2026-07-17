@@ -5,6 +5,7 @@ import {
 import { ITerminalTracker } from '@jupyterlab/terminal';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { COLOURS, setWidgetTabColour } from './colours';
+import { deadTerminalIds, stableTabId } from './identity';
 import { IColourfulTabs } from './tokens';
 
 export { IColourfulTabs } from './tokens';
@@ -85,7 +86,7 @@ function getTerminalSessionMap(): Map<string, string> {
     terminalTracker.forEach(widget => {
       const session = widget.content?.session;
       if (session?.model?.name) {
-        widgetToSession.set(widget.id, `terminal:${session.model.name}`);
+        widgetToSession.set(widget.id, session.model.name);
       }
     });
   }
@@ -113,34 +114,29 @@ function clearTabColour(tabElement: HTMLElement): void {
 }
 
 /**
- * Get stable identifier for a tab.
- * - For files: extract Path from title attribute
- * - For terminals: use terminal session name (e.g., "terminal:1")
+ * Get the identifier a tab's colour is PERSISTED under, or null when the tab
+ * has no stable identity (see `stableTabId` for why a widget id is not one).
  */
 function getStableTabId(tabElement: HTMLElement): string | null {
-  const title = tabElement.getAttribute('title');
   const widgetId = tabElement.dataset.id;
+  const sessionName = widgetId
+    ? (getTerminalSessionMap().get(widgetId) ?? null)
+    : null;
+  return stableTabId(tabElement.getAttribute('title'), sessionName);
+}
 
-  // For files: title contains "Path: /path/to/file.ipynb"
-  if (title && title.includes('Path:')) {
-    const pathMatch = title.match(/Path:\s*(.+?)(?:\n|$)/);
-    if (pathMatch && pathMatch[1]) {
-      return pathMatch[1].trim();
-    }
+/**
+ * Drop stored colours for terminal sessions the server no longer lists, so a
+ * recycled terminal name starts clear (DEF-6). The server's running list is the
+ * authority on death: closing a terminal's TAB while its session keeps running
+ * still lists it, so that colour correctly survives.
+ */
+function pruneDeadTerminalColours(liveNames: string[]): void {
+  const dead = deadTerminalIds(tabColours.keys(), liveNames);
+  if (dead.length > 0) {
+    dead.forEach(id => tabColours.delete(id));
+    saveTabColours();
   }
-
-  // For terminals: use session name which persists across browser refresh
-  if (widgetId) {
-    const terminalMap = getTerminalSessionMap();
-    const sessionId = terminalMap.get(widgetId);
-    if (sessionId) {
-      return sessionId;
-    }
-    // Fallback to widget ID for non-terminal widgets
-    return widgetId;
-  }
-
-  return null;
 }
 
 /**
@@ -285,6 +281,14 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     // Load persisted colours from localStorage
     loadTabColours();
 
+    // Age out colours of terminal sessions the server no longer runs, so a
+    // recycled terminal name starts clear (DEF-6). Driven by the server's own
+    // running list rather than by tab restoration - the 1.1.3 regression came
+    // from a cleanup that ran before tab identifiers had resolved.
+    app.serviceManager.terminals.runningChanged.connect((_, models) => {
+      pruneDeadTerminalColours(models.map(m => m.name));
+    });
+
     const { commands } = app;
 
     // Track right-clicked tab using capture phase to get it before menu opens
@@ -316,13 +320,16 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
             currentTabElement &&
             currentTabElement.classList.contains('lm-TabBar-tab')
           ) {
+            // Colour the tab either way; persist only when it has a stable
+            // identity - storing under a recyclable widget id would re-paint
+            // future tabs that reuse the id (DEF-6)
             const stableId = getStableTabId(currentTabElement);
             if (stableId) {
               tabColours.set(stableId, index);
               saveTabColours();
-              applyTabColour(currentTabElement, index);
-              applyToolbarColour();
             }
+            applyTabColour(currentTabElement, index);
+            applyToolbarColour();
           }
         }
       });
@@ -338,13 +345,15 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
           currentTabElement &&
           currentTabElement.classList.contains('lm-TabBar-tab')
         ) {
+          // Clear the tab either way - a tab with no stable identity carries a
+          // session-only colour and must still be clearable
           const stableId = getStableTabId(currentTabElement);
           if (stableId) {
-            clearTabColour(currentTabElement);
             tabColours.delete(stableId);
             saveTabColours();
-            applyToolbarColour();
           }
+          clearTabColour(currentTabElement);
+          applyToolbarColour();
         }
       }
     });

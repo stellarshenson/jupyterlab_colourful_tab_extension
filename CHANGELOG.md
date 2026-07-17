@@ -2,6 +2,16 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.13
+
+### Fixed
+
+- A brand-new tab no longer opens already coloured. Colours were stored under identifiers that get reused: a launcher's widget id (`launcher-0`) is a counter that restarts every browser session, so the first launcher always inherited the colour, and a terminal's session name is handed straight back out by the server when the terminal closes, so the next terminal to receive that number inherited its colour. A colour is now persisted only for a tab with a real identity - a file (its path) or a terminal (its live session) - and a terminal's colour is dropped once the server stops listing that session. Tabs without a stable identity are still colourable; the colour simply does not outlive the session
+
+### Changed
+
+- Tab identity resolution moved into `src/identity.ts` so it can be unit-tested directly; the previous suite could not execute it
+
 ## 1.1.12
 
 ### Changed

@@ -5,6 +5,7 @@ Consolidated acceptance criteria for the extension. One `##` section per feature
 ## Contents
 
 - [Active Tab Colour](#active-tab-colour)
+- [Tab Identity and Colour Persistence](#tab-identity-and-colour-persistence)
 
 ## Active Tab Colour
 
@@ -55,3 +56,33 @@ The selected dock tab (`.lm-mod-current`) carrying a colour class renders a dist
   - log: 2026-07-15 implemented, pending runtime verification
 - [ ] **Edge: toolbar shade** - the active notebook's `jp-toolbar` keeps the base colour, not the `-active` shade, since only `.lm-mod-current` tabs match the active rule; confirm acceptable
   - log: 2026-07-15 known behaviour, pending confirmation
+
+## Tab Identity and Colour Persistence
+
+A menu-set colour is stored in localStorage under a stable id resolved by `getStableTabId` (`src/index.ts`) and restored on refresh. The id must identify the ACTUAL thing in the tab, never a recyclable slot: JupyterLab widget ids (`launcher-0`) are a per-session counter, and terminado hands a new terminal the lowest free name (`_next_available_name` counts from 1), so both recycle and let a fresh tab inherit a dead tab's colour (DEF-6).
+
+- [ ] **Fresh tab is clear** - a completely new tab (launcher, plain shell, any widget) opens with NO colour, whatever colours were set on earlier tabs; a colour appears only when the user sets it on THAT tab or an extension tints it via the API (DEF-6)
+  - log: 2026-07-17 criterion added on user report - new launcher and new non-Claude terminal both acquired peach
+  - log: 2026-07-17 fixed - both recycling paths closed (no widget-id storage, dead terminals pruned); runtime confirmation pending
+- [ ] **File identity is the path** - a file/notebook tab resolves to its path (scraped from the tab `title` attribute, `Path: ...`), so its colour survives refresh and follows the file across close/reopen
+  - log: 2026-07-17 pre-existing behaviour, verify unchanged by the fix
+  - log: 2026-07-17 unit-tested in `identity.spec.ts` - path resolution kept, and the prune provably never touches a path key
+- [ ] **Terminal identity is the live session** - a terminal's colour is keyed on its session name (`terminal:<n>`) AND only survives while the server still lists that terminal; once the session is gone the stored colour is dropped, so the recycled name starts clear
+  - log: 2026-07-17 criterion added, in progress
+  - log: 2026-07-17 fixed - `pruneDeadTerminalColours` on `terminals.runningChanged`; mutation-tested (disabling the prune fails 4 tests); runtime confirmation pending
+- [ ] **No colour under a recyclable slot** - a widget with no stable identity (no file path, no terminal session - launcher, settings, etc.) never writes a colour to localStorage; its raw widget id is a per-session counter and must not be a storage key
+  - log: 2026-07-17 criterion added, in progress
+  - log: 2026-07-17 fixed - `stableTabId` returns null for those tabs; mutation-tested (re-adding the widget-id identity fails 2 tests); the tab is still coloured in-session, only persistence is refused
+- [ ] **Refresh persistence intact** - a file tab and a still-running terminal both keep their colours across a browser refresh, and across a JupyterHub control-panel round trip (the 1.1.3 regression - cleanup must not run before identifiers resolve)
+  - log: 2026-07-17 criterion added - guard against re-introducing the 1.1.3 defect
+- [ ] **Edge: terminal closed then name recycled** - colouring `terminal:3`, closing that terminal, then opening a new one that receives name `3` leaves the new terminal clear
+  - log: 2026-07-17 criterion added - the reported defect, reproduced from terminado's allocator
+  - log: 2026-07-17 holds only for a WITNESSED death - see the unwitnessed-gap limitation below
+- [ ] **Known limitation: unwitnessed death then recycle** - if terminal 3 dies AND its name is reused entirely while the JupyterLab page is closed, the new terminal 3 inherits the old colour; the prune only fires on deaths observed via `terminals.runningChanged`, and at reload the new terminal is indistinguishable from the old one - the frontend's whole terminal model is `{name: string}`, with no uuid and no creation time, so nothing can tell them apart; JupyterLab itself has the same conflation (its restorer keys terminals on `session.name`) and reconnects a restored tab to whatever session now holds the name; closing this needs a server extension (the only observer that outlives the terminals) - deliberately not built, see DEF-6 notes
+  - log: 2026-07-17 found while designing a stabler id at user's prompt; accepted for now, architecture decision pending
+- [ ] **Edge: tab closed, session alive** - closing a terminal's TAB while the server session keeps running retains the colour; reopening that terminal restores it (tab close is not session death)
+  - log: 2026-07-17 criterion added, pending runtime verification
+- [ ] **Edge: uncoloured tab left alone** - a tab whose stable id has no stored entry is never painted by the restore path
+  - log: 2026-07-17 criterion added, pending runtime verification
+- [ ] **Edge: file renamed / deleted** - a renamed file's tab loses its colour (path is the identity, known and accepted); recreating a file at a previously coloured path restores that colour
+  - log: 2026-07-17 known behaviour, confirm acceptable

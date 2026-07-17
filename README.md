@@ -34,9 +34,10 @@ Assign colours to tabs via right-click context menu for easy visual identificati
 
 - Right-click any tab to assign a colour from the "Set Tab Colour" submenu
 - Selected (active) tab shows a distinct shade of its colour so it stands out from other coloured tabs
-- Colours persist across browser refreshes via localStorage
+- Colours persist across browser refreshes via localStorage - a file keeps its colour by path, a terminal for as long as its session runs
 - Notebook toolbar matches the active tab colour
-- Automatic cleanup when tabs are closed
+- A terminal's colour is released once its session ends, so the next terminal to reuse that number starts clear
+- Tabs with no lasting identity of their own (the launcher, for example) can still be coloured, but the colour lasts only for the session
 
 Yes, this is yet another mass-produced JupyterLab extension that does one trivially simple thing. We are almost embarrassed by how utterly unremarkable it is - just some CSS classes and a context menu. But someone had to do it, and here we are. You're welcome.
 
