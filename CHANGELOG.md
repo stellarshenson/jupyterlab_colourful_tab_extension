@@ -2,6 +2,18 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.14
+
+### Added
+
+- Dynamic divider between adjacent same-coloured tabs: the theme's 1px seam is recoloured with a greyscale stroke computed at runtime to at least 4:1 contrast against both the inactive and active shade of the tab colour - darker than the tabs in the light theme, brighter in the dark theme. Both sides of the seam are set (the previous tab's right border normally renders it, but the next tab's left border wins when that tab is selected). Toggleable via the new `dynamicDivider` setting (on by default)
+- Palette editor in the JupyterLab Settings Editor (Settings - Colourful Tabs): every colour name exposes its inactive and active shade for both the light and dark theme as editable hex values. Edits apply live - tabs, the active toolbar strip, menu swatches and divider greys all follow, since everything reads the same CSS variables and the divider greys are recomputed from the palette
+- If the user settings file is invalid (bad hex, unknown key), the extension falls back to the default palette with the divider still active, instead of silently disabling the feature
+
+### Fixed
+
+- The npm package now ships the `schema/` directory - previously the new settings schema would have been missing from the published tarball
+
 ## 1.1.13
 
 ### Fixed
