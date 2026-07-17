@@ -26,6 +26,65 @@
       }
     ]
   },
-  "properties": {},
-  "additionalProperties": false
+  "properties": {
+    "dynamicDivider": {
+      "title": "Dynamic divider between same-coloured tabs",
+      "description": "When two adjacent tabs share the same colour, recolour the 1px divider between them with a computed contrastive grey (darker in the light theme, brighter in the dark theme) so the tabs stay visually separate.",
+      "type": "boolean",
+      "default": true
+    },
+    "palette": {
+      "title": "Tab colour palette",
+      "description": "Inactive and active shades per colour name, for the light and dark themes. Hex format #rrggbb. Divider greys are recomputed automatically from these values.",
+      "$ref": "#/definitions/palette",
+      "default": {
+        "light": {
+          "rose": { "inactive": "#ffd6e0", "active": "#ff9db5" },
+          "peach": { "inactive": "#ffe5cc", "active": "#ffbe80" },
+          "lemon": { "inactive": "#fff9c4", "active": "#fff176" },
+          "mint": { "inactive": "#c8f7c5", "active": "#8ff08a" },
+          "sky": { "inactive": "#a8d4f0", "active": "#6ec1f5" },
+          "lavender": { "inactive": "#e5d6f7", "active": "#c39bf5" }
+        },
+        "dark": {
+          "rose": { "inactive": "#4e3138", "active": "#3a2328" },
+          "peach": { "inactive": "#4e4032", "active": "#3a3126" },
+          "lemon": { "inactive": "#4e4b32", "active": "#3a3825" },
+          "mint": { "inactive": "#324e37", "active": "#253b2a" },
+          "sky": { "inactive": "#28394d", "active": "#1d2a38" },
+          "lavender": { "inactive": "#40324e", "active": "#30253a" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "palette": {
+      "type": "object",
+      "properties": {
+        "light": { "$ref": "#/definitions/themePalette" },
+        "dark": { "$ref": "#/definitions/themePalette" }
+      },
+      "additionalProperties": false
+    },
+    "themePalette": {
+      "type": "object",
+      "properties": {
+        "rose": { "$ref": "#/definitions/colourPair" },
+        "peach": { "$ref": "#/definitions/colourPair" },
+        "lemon": { "$ref": "#/definitions/colourPair" },
+        "mint": { "$ref": "#/definitions/colourPair" },
+        "sky": { "$ref": "#/definitions/colourPair" },
+        "lavender": { "$ref": "#/definitions/colourPair" }
+      },
+      "additionalProperties": false
+    },
+    "colourPair": {
+      "type": "object",
+      "properties": {
+        "inactive": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "active": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+      },
+      "additionalProperties": false
+    }
+  }
 }

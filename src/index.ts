@@ -2,9 +2,15 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITerminalTracker } from '@jupyterlab/terminal';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { COLOURS, setWidgetTabColour } from './colours';
+import {
+  applyDynamicStyle,
+  buildDynamicCss,
+  mergePalette
+} from './dynamicStyle';
 import { deadTerminalIds, stableTabId } from './identity';
 import { IColourfulTabs } from './tokens';
 
@@ -269,8 +275,12 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     'JupyterLab extension that makes tabs coloured using pastel colours to help identify them when many are open',
   autoStart: true,
   provides: IColourfulTabs,
-  optional: [ITerminalTracker],
-  activate: (app: JupyterFrontEnd, tracker: ITerminalTracker | null) => {
+  optional: [ITerminalTracker, ISettingRegistry],
+  activate: (
+    app: JupyterFrontEnd,
+    tracker: ITerminalTracker | null,
+    settingRegistry: ISettingRegistry | null
+  ) => {
     console.log(
       'JupyterLab extension jupyterlab_colourful_tab_extension is activated!'
     );
@@ -288,6 +298,39 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     app.serviceManager.terminals.runningChanged.connect((_, models) => {
       pruneDeadTerminalColours(models.map(m => m.name));
     });
+
+    // Settings drive the palette and the same-colour divider by regenerating
+    // an injected <style> element: it redefines the CSS variables every rule
+    // reads (tabs, toolbar, menu swatches, icons), so palette edits propagate
+    // everywhere without touching style/base.css. `mergePalette` fills in
+    // defaults for partial data - the settings composite replaces nested
+    // objects wholesale rather than deep-merging, so a user override of one
+    // colour arrives without the others. Invalid data never reaches it: the
+    // registry validates user settings against the schema first, so a
+    // malformed settings file (one mistyped hex is enough) rejects the whole
+    // load and lands in the catch below. There the schema defaults are applied
+    // instead - the user loses their customisations but keeps the default
+    // palette and the default-on divider, rather than the whole feature.
+    if (settingRegistry) {
+      settingRegistry
+        .load(plugin.id)
+        .then(settings => {
+          const apply = (): void => {
+            applyDynamicStyle(
+              buildDynamicCss(
+                mergePalette(settings.composite.palette),
+                settings.composite.dynamicDivider !== false
+              )
+            );
+          };
+          apply();
+          settings.changed.connect(apply);
+        })
+        .catch(err => {
+          console.warn('Colourful Tab: failed to load settings', err);
+          applyDynamicStyle(buildDynamicCss(mergePalette(undefined), true));
+        });
+    }
 
     const { commands } = app;
 
