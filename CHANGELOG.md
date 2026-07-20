@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.16
+
+### Changed
+
+- Retuned the divider contrast ladder one notch subtler after live use: low now targets 2:1 (a deliberate hairline below the WCAG non-text floor - the divider is an aesthetic aid, not text), medium 3:1 (the WCAG non-text minimum, still the default), high 4:1 (exactly the previous medium - its greys are byte-identical, so users who prefer the old default strength select high). The previous 6:1 tier is gone
+
 ## 1.1.15
 
 ### Added

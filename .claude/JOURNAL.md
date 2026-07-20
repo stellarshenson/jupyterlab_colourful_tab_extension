@@ -93,3 +93,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 30. **Task [Short] - Exclude active tab from divider (DEF-7)** (v1.1.15): user - divider belongs between two INACTIVE same-coloured tabs only; the active tab is already distinguished by its `-active` shade<br>
     **Result**: `:not(.lm-mod-current)` on both neighbours in `dividerRules`, grey computed vs the inactive shade only (active can no longer touch a seam); guard test pins the `:not` on every emitted border rule; DEF-7 in `docs/defects.md`; 52 jest green
+
+31. **Task [Short] - Retune contrast ladder one notch subtler** (v1.1.16): after live use the ladder read too strong - user: medium takes low's value, high takes medium's, new low much subtler<br>
+    **Result**: `CONTRAST_TARGETS` now low 2:1 (hairline, deliberately below the WCAG non-text floor), medium 3:1 (floor, default), high 4:1 (the original strength - greys byte-identical to the old medium); pins, schema description and JSDoc updated; 52 jest green

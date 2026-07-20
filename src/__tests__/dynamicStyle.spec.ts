@@ -131,11 +131,12 @@ describe('buildDynamicCss', () => {
 describe('divider contrast magnitudes', () => {
   const magnitudes = Object.keys(CONTRAST_TARGETS) as DividerContrast[];
 
-  it('pins the target values - medium 4.0 is the pre-setting behaviour', () => {
+  it('pins the target values - the deliberately subtle post-1.1.14 ladder', () => {
     // the magnitude tests below read CONTRAST_TARGETS themselves, so without
     // this pin a retuned value would pass the whole suite while shifting
-    // every user's default visuals
-    expect(CONTRAST_TARGETS).toEqual({ low: 3.0, medium: 4.0, high: 6.0 });
+    // every user's default visuals. The ladder was retuned one notch subtler
+    // by user decision after live use: high carries the original 4.0
+    expect(CONTRAST_TARGETS).toEqual({ low: 2.0, medium: 3.0, high: 4.0 });
   });
 
   it('defaults to medium', () => {

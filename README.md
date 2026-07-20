@@ -36,7 +36,7 @@ Assign colours to tabs via right-click context menu for easy visual identificati
 - Selected (active) tab shows a distinct shade of its colour so it stands out from other coloured tabs
 - Colours persist across browser refreshes via localStorage - a file keeps its colour by path, a terminal for as long as its session runs
 - Notebook toolbar matches the active tab colour
-- Adjacent inactive tabs sharing the same colour keep a visible divider: the 1px seam between them is recoloured with a contrastive grey computed from the tab colour (darker in the light theme, brighter in the dark theme); the active tab is excluded - its distinct shade already sets it apart. Toggleable via the `dynamicDivider` setting, with strength selectable via `dividerContrast` (low 3:1, medium 4:1, high 6:1)
+- Adjacent inactive tabs sharing the same colour keep a visible divider: the 1px seam between them is recoloured with a contrastive grey computed from the tab colour (darker in the light theme, brighter in the dark theme); the active tab is excluded - its distinct shade already sets it apart. Toggleable via the `dynamicDivider` setting, with strength selectable via `dividerContrast` (low 2:1 hairline, medium 3:1, high 4:1)
 - Editable palette in the Settings Editor (Settings → Colourful Tabs): inactive and active shades per colour name, for both themes - edits apply live to tabs, toolbar, menu swatches and divider greys
 - A terminal's colour is released once its session ends, so the next terminal to reuse that number starts clear
 - Tabs with no lasting identity of their own (the launcher, for example) can still be coloured, but the colour lasts only for the session

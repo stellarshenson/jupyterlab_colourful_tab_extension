@@ -36,15 +36,18 @@ const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 export type DividerContrast = 'low' | 'medium' | 'high';
 
 /**
- * Target contrast ratio per magnitude. low is the WCAG non-text minimum
- * (subtlest line), medium the original 4.0:1 default, high a strong
- * separation. Must stay identical to the dividerContrast enum in
- * schema/plugin.json - the anti-drift test pins the two together.
+ * Target contrast ratio per magnitude. Retuned one notch subtler after live
+ * use (the 1.1.14 ladder read too strong): high is the original 4.0:1
+ * strength, medium the WCAG non-text minimum, and low a deliberate hairline
+ * BELOW that floor - the divider is an aesthetic aid, not text, so subtlety
+ * on explicit user choice outranks the guideline. Must stay identical to the
+ * dividerContrast enum in schema/plugin.json - the anti-drift test pins the
+ * two together.
  */
 export const CONTRAST_TARGETS: { [K in DividerContrast]: number } = {
-  low: 3.0,
-  medium: 4.0,
-  high: 6.0
+  low: 2.0,
+  medium: 3.0,
+  high: 4.0
 };
 
 /**
@@ -172,7 +175,7 @@ function dividerRules(id: string, grey: string, prefix: string): string {
  *
  * @param palette - the merged palette to emit
  * @param dynamicDivider - whether to emit the divider rules
- * @param contrast - divider contrast magnitude; default 'medium' (4.0:1)
+ * @param contrast - divider contrast magnitude; default 'medium' (3.0:1)
  */
 export function buildDynamicCss(
   palette: IPalette,

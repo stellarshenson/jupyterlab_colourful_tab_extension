@@ -35,7 +35,7 @@
     },
     "dividerContrast": {
       "title": "Divider contrast",
-      "description": "Strength of the divider grey between adjacent same-coloured tabs: low targets 3:1 (the WCAG non-text minimum, subtlest line), medium 4:1, high 6:1 (strongest separation).",
+      "description": "Strength of the divider grey between adjacent same-coloured tabs: low targets 2:1 (a subtle hairline), medium 3:1 (the WCAG non-text minimum), high 4:1 (strongest separation).",
       "type": "string",
       "enum": ["low", "medium", "high"],
       "default": "medium"
