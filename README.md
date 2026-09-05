@@ -63,14 +63,26 @@ To remove the extension, execute:
 pip uninstall jupyterlab_colourful_tab_extension
 ```
 
+## Server extension
+
+The package installs a `jupyter_server` extension next to the frontend. It serves one route, and its only job is to say which pty process is behind each terminal.
+
+- `GET /colourful-tab/terminals` answers `{"terminals": {"<name>": "<fingerprint>"}}`, where the fingerprint is the terminal's pty process id paired with that process's start time
+- The browser cannot answer this itself: `GET /api/terminals` reports `name` and `last_activity` only, and `last_activity` moves forward for a reused name exactly as it does for a busy one, so it cannot separate one incarnation of a name from the next
+- Terminal names are slots - the server hands a closed terminal's name to the next terminal created - so a stored colour is kept only while the fingerprint behind its name is unchanged, and a recycled name starts clear
+- With the route unavailable (server extension disabled, or an older release) the frontend falls back to dropping the colours of terminals the server no longer lists as running
+- **Upgrading from an earlier release clears the terminal tab colours you had set.** They were stored with no fingerprint, and an entry that cannot be tied to a live pty process is indistinguishable from the stale entry this check exists to remove. It happens once, at the first start after the upgrade, and only to terminal tabs - colours on file tabs are keyed by path and are untouched
+
 ## Extension API
 
-Other extensions can tint a widget's tab programmatically via the public `IColourfulTabs` token.
+Other extensions can tint a widget's tab, learn what the user picked on it, and take the tab's colour over entirely, through the public `IColourfulTabs` token. It has three members.
 
 - Import the token from `jupyterlab_colourful_tab_extension` and request it as an `optional` (or `requires`) plugin dependency
-- Call `setColour(widget, colourId)` where `colourId` is one of `rose`, `peach`, `lemon`, `mint`, `sky`, `lavender`, or `null` to clear
-- The tint rides the widget's Lumino `title.className`, so it survives tab re-renders and reordering with no DOM querying
-- Programmatic colours are independent of the right-click menu's localStorage-persisted colours
+- `setColour(widget, colourId)` tints a tab, where `colourId` is one of `rose`, `peach`, `lemon`, `mint`, `sky`, `lavender`, or `null` to clear. The tint rides the widget's Lumino `title.className`, so it survives tab re-renders and reordering with no DOM querying. On an unclaimed tab it also drops whatever the right-click menu had stored for that tab, so the two do not fight over it
+- `colourChanged` is a Lumino signal carrying `{ widgetId, colourId }` for every colour picked from the menu and every clear, with `colourId` null for a clear. It is the only way to learn of a choice: a stored value is a leftover rather than evidence of a click, and a claimed tab is never stored at all
+- `claim(widget)` declares that the caller persists this tab's colour and returns an `IDisposable` that releases it. Claims are counted, so one holder's dispose leaves another holder's claim standing
+- The claim suppresses persistence: a pick or a clear on a claimed tab paints it and is announced, writes nothing, and deletes any entry stored for that tab before, because the user has just replaced the choice it recorded
+- A stored colour is still restored onto a tab carrying no colour class, which for a claimed tab means its owner has painted nothing. There it must also still match the fingerprint of the terminal now behind its name - an unverified entry is what a recycled name leaves behind - so the owner's colour wins whenever it has one and a verified earlier choice of the user's shows when it does not. Nothing is handed over and no second copy of the colour is made
 
 ```ts
 import {

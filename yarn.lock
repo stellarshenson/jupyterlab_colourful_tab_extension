@@ -2312,7 +2312,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/coreutils@npm:^6.5.0":
+"@jupyterlab/coreutils@npm:^6.0.0, @jupyterlab/coreutils@npm:^6.5.0":
   version: 6.5.0
   resolution: "@jupyterlab/coreutils@npm:6.5.0"
   dependencies:
@@ -2594,7 +2594,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/services@npm:^7.5.0":
+"@jupyterlab/services@npm:^7.0.0, @jupyterlab/services@npm:^7.5.0":
   version: 7.5.0
   resolution: "@jupyterlab/services@npm:7.5.0"
   dependencies:
@@ -2995,7 +2995,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lumino/disposable@npm:^1.10.0 || ^2.0.0, @lumino/disposable@npm:^2.1.5":
+"@lumino/disposable@npm:^1.10.0 || ^2.0.0, @lumino/disposable@npm:^2.0.0, @lumino/disposable@npm:^2.1.5":
   version: 2.1.5
   resolution: "@lumino/disposable@npm:2.1.5"
   dependencies:
@@ -3056,7 +3056,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lumino/signaling@npm:^1.10.0 || ^2.0.0, @lumino/signaling@npm:^2.1.5":
+"@lumino/signaling@npm:^1.10.0 || ^2.0.0, @lumino/signaling@npm:^2.0.0, @lumino/signaling@npm:^2.1.5":
   version: 2.1.5
   resolution: "@lumino/signaling@npm:2.1.5"
   dependencies:
@@ -7720,11 +7720,15 @@ __metadata:
   dependencies:
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/builder": ^4.0.0
+    "@jupyterlab/coreutils": ^6.0.0
+    "@jupyterlab/services": ^7.0.0
     "@jupyterlab/settingregistry": ^4.0.0
     "@jupyterlab/terminal": ^4.0.0
     "@jupyterlab/testutils": ^4.0.0
     "@jupyterlab/ui-components": ^4.0.0
     "@lumino/coreutils": ^2.0.0
+    "@lumino/disposable": ^2.0.0
+    "@lumino/signaling": ^2.0.0
     "@lumino/widgets": ^2.0.0
     "@types/jest": ^29.2.0
     "@types/json-schema": ^7.0.11
@@ -8350,8 +8354,8 @@ __metadata:
   linkType: hard
 
 "node-gyp@npm:latest":
-  version: 13.0.1
-  resolution: "node-gyp@npm:13.0.1"
+  version: 13.0.2
+  resolution: "node-gyp@npm:13.0.2"
   dependencies:
     env-paths: ^2.2.0
     exponential-backoff: ^3.1.1
@@ -8365,7 +8369,7 @@ __metadata:
     which: ^7.0.0
   bin:
     node-gyp: bin/node-gyp.js
-  checksum: 9d4e0eeaa415ca33a85278ecf2bdb61a7c32649e9423ec7743912b97e58169606ef44504f7d3a746cd9179f50c8d37d5bb70ae76fbc4803122f7747e819453f6
+  checksum: 08acf4dd37b725a5b87a924597e8eabecc35691991e651c54641224b2daa63619fbcbffc0da8ad19aabed1b9906bdb4d0acf47cfd70f25c5c050423e940cd161
   languageName: node
   linkType: hard
 
@@ -8671,9 +8675,9 @@ __metadata:
   linkType: hard
 
 "picomatch@npm:^4.0.4":
-  version: 4.0.5
-  resolution: "picomatch@npm:4.0.5"
-  checksum: 44f305aa44f33c15d304f2e887409961d1c14eebd465b5553d8aefddcfe7b5e40d208148adef8c21a21183dda2fdba1e83c8a56918e3b5e5d3db6bcaba5b7e12
+  version: 4.0.7
+  resolution: "picomatch@npm:4.0.7"
+  checksum: a97edd7659fc7f39769734bcacd8e9c2f8711d0c30f0caf143577c4d59b3338e17e884ead92805701c71d54040067909e8d3dd45ed814fc8af154ca747fb06a4
   languageName: node
   linkType: hard
 
@@ -9851,15 +9855,15 @@ __metadata:
   linkType: hard
 
 "tar@npm:^7.5.4":
-  version: 7.5.20
-  resolution: "tar@npm:7.5.20"
+  version: 7.5.22
+  resolution: "tar@npm:7.5.22"
   dependencies:
     "@isaacs/fs-minipass": ^4.0.0
     chownr: ^3.0.0
     minipass: ^7.1.2
     minizlib: ^3.1.0
     yallist: ^5.0.0
-  checksum: 85f0acccee46a1d6e1a1c0f7e03e66f4f7e91debbcd472365e3f398c29447089f99c269cb2552554a0b424f03bba15f94a3de95c4851f13b0be43085f80e58c1
+  checksum: e1434f40954410d191ab6d89017bfd40c24869cfd319d19dd74f84db13cbea15370a22bc9b8ecd699d05c2777ec6297f35dac318ed4829b6e776a7cb4f1f7c68
   languageName: node
   linkType: hard
 
@@ -10148,9 +10152,9 @@ __metadata:
   linkType: hard
 
 "undici@npm:^8.4.1":
-  version: 8.7.0
-  resolution: "undici@npm:8.7.0"
-  checksum: d1dc9be1d154a7506e4928ba8643dd4d64973171411af5191eb98d4139471930b6a15d2e226422699ea95eb669afc515d77c29888469b7d0be4987656c5c3efa
+  version: 8.10.2
+  resolution: "undici@npm:8.10.2"
+  checksum: bbf522bf0999a94b66eb2171ec96d9ac2bf681dd298a28976b72dd7cd4449e96839b3a8b88eaea34b88903ddcf32f3c7a026b6e18a698ad7acfb73c3e19a372a
   languageName: node
   linkType: hard
 

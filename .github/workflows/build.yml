@@ -40,9 +40,18 @@ jobs:
           set -eux
           python -m pip install .[test]
 
+          pytest -vv -r ap --cov jupyterlab_colourful_tab_extension
+          jupyter server extension list
+          jupyter server extension list 2>&1 | grep -ie "jupyterlab_colourful_tab_extension.*OK"
+
           jupyter labextension list
           jupyter labextension list 2>&1 | grep -ie "jupyterlab_colourful_tab_extension.*OK"
           python -m jupyterlab.browser_check
+
+      - name: Check that all endpoints are authenticated
+        run: |
+          set -eux
+          python .github/scripts/check_auth.py
 
       - name: Package the extension
         run: |
@@ -81,6 +90,9 @@ jobs:
 
           pip install "jupyterlab>=4.0.0,<5" jupyterlab_colourful_tab_extension*.whl
 
+
+          jupyter server extension list
+          jupyter server extension list 2>&1 | grep -ie "jupyterlab_colourful_tab_extension.*OK"
 
           jupyter labextension list
           jupyter labextension list 2>&1 | grep -ie "jupyterlab_colourful_tab_extension.*OK"

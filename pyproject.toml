@@ -22,7 +22,12 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
-dependencies = []
+dependencies = [
+    # Hosts the server half - the route reporting each terminal's pty
+    # incarnation, which is the only way a browser can tell a reused terminal
+    # name from the terminal that name used to belong to.
+    "jupyter_server>=2.4.0,<3",
+]
 dynamic = ["version", "description", "authors", "keywords"]
 
 [project.optional-dependencies]
@@ -50,6 +55,7 @@ exclude = [".github", "binder"]
 [tool.hatch.build.targets.wheel.shared-data]
 "jupyterlab_colourful_tab_extension/labextension" = "share/jupyter/labextensions/jupyterlab_colourful_tab_extension"
 "install.json" = "share/jupyter/labextensions/jupyterlab_colourful_tab_extension/install.json"
+"jupyter-config/jupyter_server_config.d" = "etc/jupyter/jupyter_server_config.d"
 
 [tool.hatch.build.hooks.version]
 path = "jupyterlab_colourful_tab_extension/_version.py"

@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.20
+
+### Added
+
+- Extension API: `claim(widget)` on `IColourfulTabs` lets another extension declare that it persists a tab's colour. A claimed tab is never written to browser storage, a pick or a clear on it deletes any entry stored for it before, and claims are reference counted so one holder releasing cannot cancel another's
+- Extension API: `colourChanged`, a signal carrying `{ widgetId, colourId }` for every colour picked from the right-click menu and every clear, with `colourId` null for a clear. It is the only way to learn of a choice - a stored value is a leftover rather than evidence of a click
+- A `jupyter_server` extension serving `GET /colourful-tab/terminals`, which answers the pty process identity behind each terminal name. The browser cannot work this out for itself: `GET /api/terminals` reports only `name` and `last_activity`, and `last_activity` moves forward for a reused name exactly as it does for a busy one
+
+### Fixed
+
+- A terminal tab could inherit the colour of a terminal that had already closed. The server hands a closed terminal's name to the next terminal created, and the stored colour was keyed on that name alone, so the entry survived every prune - a recycled name is present in the running list, which is the only thing the prune could check. A terminal colour now carries the pty incarnation behind its name and is dropped as soon as that stops matching
+
+### Changed
+
+- **Upgrading from an earlier release clears the terminal tab colours you had set.** They were stored with no process identity, and an entry that cannot be tied to a live pty process is indistinguishable from the stale entry the new check exists to remove. It happens once, at the first start after the upgrade, and only to terminal tabs - colours on file tabs are keyed by path and are untouched
+- With the server extension unavailable, no colour can be verified, so terminal colours fall back to the running-list prune the extension had before
+- This release also carries the divider contrast retune listed under 1.1.16, which was committed after that version was published and so has never been in a released artefact
+
 ## 1.1.16
 
 ### Changed

@@ -1,4 +1,17 @@
-import { deadTerminalIds, stableTabId, terminalTabId } from '../identity';
+import {
+  IStoredColour,
+  parseStoredColour,
+  stableTabId,
+  staleTerminalIds,
+  terminalSessionName
+} from '../identity';
+
+/** The persisted entries, in the shape the prune reads them. */
+function stored(
+  ...pairs: Array<[string, IStoredColour]>
+): Map<string, IStoredColour> {
+  return new Map(pairs);
+}
 
 describe('stableTabId', () => {
   it('resolves a file tab to its path', () => {
@@ -23,40 +36,127 @@ describe('stableTabId', () => {
   });
 });
 
-describe('deadTerminalIds', () => {
-  it('drops a terminal whose session the server no longer lists', () => {
-    expect(deadTerminalIds(['terminal:3'], [])).toEqual(['terminal:3']);
+describe('parseStoredColour', () => {
+  const PALETTE = 6;
+
+  it('reads the pre-fingerprint bare number as a colour with no fingerprint', () => {
+    expect(parseStoredColour(2, PALETTE)).toEqual({ colour: 2 });
   });
 
-  it('keeps a terminal whose session is still running', () => {
-    expect(deadTerminalIds(['terminal:3'], ['3'])).toEqual([]);
+  it('reads the fingerprinted object shape', () => {
+    expect(parseStoredColour({ colour: 2, fp: 'pty-a' }, PALETTE)).toEqual({
+      colour: 2,
+      fp: 'pty-a'
+    });
   });
 
-  it('never prunes file paths, whatever the server reports', () => {
-    const stored = ['/home/lab/x.ipynb', 'terminal:2'];
-    expect(deadTerminalIds(stored, [])).toEqual(['terminal:2']);
-    expect(deadTerminalIds(stored, ['2'])).toEqual([]);
+  it('drops a value that is not a colour at all', () => {
+    // localStorage is shared, hand-editable and outlives every release; one
+    // value of another shape reaches `entry.fp` on the next prune and throws,
+    // taking tab colouring down for that browser until the key is cleared
+    expect(parseStoredColour(null, PALETTE)).toBeNull();
+    expect(parseStoredColour('mint', PALETTE)).toBeNull();
+    expect(parseStoredColour(true, PALETTE)).toBeNull();
+    expect(parseStoredColour({ fp: 'pty-a' }, PALETTE)).toBeNull();
+    expect(parseStoredColour({ colour: 'mint' }, PALETTE)).toBeNull();
   });
 
-  it('prunes only the dead names when several terminals are stored', () => {
-    const stored = ['terminal:1', 'terminal:2', 'terminal:3'];
-    expect(deadTerminalIds(stored, ['1', '3'])).toEqual(['terminal:2']);
+  it('drops a colour index the palette has no entry for', () => {
+    expect(parseStoredColour(PALETTE, PALETTE)).toBeNull();
+    expect(parseStoredColour(-1, PALETTE)).toBeNull();
+    expect(parseStoredColour(1.5, PALETTE)).toBeNull();
+    expect(parseStoredColour({ colour: 99, fp: 'pty-a' }, PALETTE)).toBeNull();
   });
 
-  it('recycled name: colouring 3, losing it, then a new 3 leaves no entry', () => {
-    // The reported defect - terminado hands the next terminal the freed name
-    const stored = ['terminal:3'];
-    const afterDeath = deadTerminalIds(stored, []);
-    expect(afterDeath).toEqual(['terminal:3']);
-    // the entry is deleted at death, so the new terminal 3 finds nothing stored
-    const remaining = stored.filter(id => !afterDeath.includes(id));
-    expect(deadTerminalIds(remaining, ['3'])).toEqual([]);
-    expect(remaining).toEqual([]);
+  it('drops an entry whose fingerprint is not a string', () => {
+    // It can never match a fingerprint the server reports, so the entry is
+    // corrupt rather than one waiting to match
+    expect(parseStoredColour({ colour: 2, fp: 17 }, PALETTE)).toBeNull();
   });
 });
 
-describe('terminalTabId', () => {
-  it('prefixes a session name', () => {
-    expect(terminalTabId('1')).toEqual('terminal:1');
+describe('staleTerminalIds with fingerprints', () => {
+  it('keeps a terminal whose fingerprint still matches', () => {
+    const entries = stored(['terminal:3', { colour: 2, fp: 'pty-a' }]);
+    expect(staleTerminalIds(entries, { '3': 'pty-a' }, ['3'])).toEqual([]);
+  });
+
+  it('recycled name: drops the dead terminal 3 while a live 3 runs', () => {
+    // The defect this rule exists for - terminado hands the next terminal the
+    // freed name, so the name is PRESENT in the running list and the colour of
+    // the dead terminal paints the new one
+    const entries = stored(['terminal:3', { colour: 3, fp: 'dead-pty' }]);
+    expect(staleTerminalIds(entries, { '3': 'live-pty' }, ['3'])).toEqual([
+      'terminal:3'
+    ]);
+    // and this is what the running list alone can see: nothing
+    expect(staleTerminalIds(entries, null, ['3'])).toEqual([]);
+  });
+
+  it('drops a terminal the server no longer reports at all', () => {
+    const entries = stored(['terminal:3', { colour: 2, fp: 'pty-a' }]);
+    expect(staleTerminalIds(entries, {}, [])).toEqual(['terminal:3']);
+  });
+
+  it('drops an entry carrying no fingerprint, whatever the server runs', () => {
+    // The pre-fingerprint shape cannot be told apart from the stale entry the
+    // prune exists to remove, so it goes rather than adopting the live one
+    const entries = stored(['terminal:3', { colour: 2 }]);
+    expect(staleTerminalIds(entries, { '3': 'pty-a' }, ['3'])).toEqual([
+      'terminal:3'
+    ]);
+  });
+
+  it('never returns a file path', () => {
+    const entries = stored(
+      ['/home/lab/x.ipynb', { colour: 4 }],
+      ['terminal:2', { colour: 1, fp: 'pty-a' }]
+    );
+    expect(staleTerminalIds(entries, {}, [])).toEqual(['terminal:2']);
+    expect(staleTerminalIds(entries, { '2': 'pty-a' }, ['2'])).toEqual([]);
+  });
+
+  it('prunes only the disowned names when several terminals are stored', () => {
+    const entries = stored(
+      ['terminal:1', { colour: 0, fp: 'pty-a' }],
+      ['terminal:2', { colour: 1, fp: 'pty-b' }],
+      ['terminal:3', { colour: 2, fp: 'pty-c' }]
+    );
+    const live = { '1': 'pty-a', '2': 'pty-new', '3': 'pty-c' };
+    expect(staleTerminalIds(entries, live, ['1', '2', '3'])).toEqual([
+      'terminal:2'
+    ]);
+  });
+});
+
+describe('staleTerminalIds without fingerprints', () => {
+  it('drops a terminal whose session the server no longer lists', () => {
+    const entries = stored(['terminal:3', { colour: 2, fp: 'pty-a' }]);
+    expect(staleTerminalIds(entries, null, [])).toEqual(['terminal:3']);
+  });
+
+  it('keeps a running terminal that carries no fingerprint', () => {
+    // A server without the fingerprint route would otherwise lose every stored
+    // terminal colour, since none of its entries can ever carry one
+    const entries = stored(['terminal:3', { colour: 2 }]);
+    expect(staleTerminalIds(entries, null, ['3'])).toEqual([]);
+  });
+
+  it('never returns a file path', () => {
+    const entries = stored(
+      ['/home/lab/x.ipynb', { colour: 4 }],
+      ['terminal:2', { colour: 1 }]
+    );
+    expect(staleTerminalIds(entries, null, [])).toEqual(['terminal:2']);
+  });
+});
+
+describe('terminalSessionName', () => {
+  it('strips the prefix off a terminal id', () => {
+    expect(terminalSessionName('terminal:3')).toEqual('3');
+  });
+
+  it('answers null for a file path', () => {
+    expect(terminalSessionName('/home/lab/x.ipynb')).toBeNull();
   });
 });
