@@ -2,6 +2,13 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.21
+
+### Changed
+
+- New light-theme palette. The previous pastels were drawn for stock JupyterLab Light's white tab bar and turned loud on light themes with a grey bar, where the selected shades were the brightest objects on screen. The six hues are kept; every shade is now a muted tint derived in CIELAB (inactive lightness 80, chroma 18; selected lightness 72.5, chroma 28, with lemon and mint at 38) that reads as a soft pastel on white and grey bars alike. The dark palette is unchanged
+- The new values are the defaults in the stylesheet, the settings schema and the code. A palette saved earlier in the Settings Editor still wins, so a user who had saved the old values keeps them until the `palette.light` block is reset
+
 ## 1.1.20
 
 ### Added

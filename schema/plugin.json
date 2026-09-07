@@ -46,12 +46,12 @@
       "$ref": "#/definitions/palette",
       "default": {
         "light": {
-          "rose": { "inactive": "#ffd6e0", "active": "#ff9db5" },
-          "peach": { "inactive": "#ffe5cc", "active": "#ffbe80" },
-          "lemon": { "inactive": "#fff9c4", "active": "#fff176" },
-          "mint": { "inactive": "#c8f7c5", "active": "#8ff08a" },
-          "sky": { "inactive": "#a8d4f0", "active": "#6ec1f5" },
-          "lavender": { "inactive": "#e5d6f7", "active": "#c39bf5" }
+          "rose": { "inactive": "#e8bbc6", "active": "#e39fb1" },
+          "peach": { "inactive": "#ddc2a7", "active": "#d2ab82" },
+          "lemon": { "inactive": "#ccc8a6", "active": "#bab56d" },
+          "mint": { "inactive": "#b3cdb1", "active": "#87c086" },
+          "sky": { "inactive": "#a5cce5", "active": "#77bae0" },
+          "lavender": { "inactive": "#cfc1e1", "active": "#bfa9da" }
         },
         "dark": {
           "rose": { "inactive": "#4e3138", "active": "#3a2328" },

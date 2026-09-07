@@ -3,22 +3,23 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
-/* Light theme pastel colours */
+/* Light theme muted pastels - tuned to read as soft tints on both the
+   white stock bar and the mid-grey bars of darker light themes */
 :root {
-  --jp-colourful-tab-rose: #ffd6e0;
-  --jp-colourful-tab-peach: #ffe5cc;
-  --jp-colourful-tab-lemon: #fff9c4;
-  --jp-colourful-tab-mint: #c8f7c5;
-  --jp-colourful-tab-sky: #a8d4f0;
-  --jp-colourful-tab-lavender: #e5d6f7;
+  --jp-colourful-tab-rose: #e8bbc6;
+  --jp-colourful-tab-peach: #ddc2a7;
+  --jp-colourful-tab-lemon: #ccc8a6;
+  --jp-colourful-tab-mint: #b3cdb1;
+  --jp-colourful-tab-sky: #a5cce5;
+  --jp-colourful-tab-lavender: #cfc1e1;
 
-  /* Brighter, more saturated shades for the active (selected) tab */
-  --jp-colourful-tab-rose-active: #ff9db5;
-  --jp-colourful-tab-peach-active: #ffbe80;
-  --jp-colourful-tab-lemon-active: #fff176;
-  --jp-colourful-tab-mint-active: #8ff08a;
-  --jp-colourful-tab-sky-active: #6ec1f5;
-  --jp-colourful-tab-lavender-active: #c39bf5;
+  /* Active (selected) tab - a little darker and more saturated */
+  --jp-colourful-tab-rose-active: #e39fb1;
+  --jp-colourful-tab-peach-active: #d2ab82;
+  --jp-colourful-tab-lemon-active: #bab56d;
+  --jp-colourful-tab-mint-active: #87c086;
+  --jp-colourful-tab-sky-active: #77bae0;
+  --jp-colourful-tab-lavender-active: #bfa9da;
 }
 
 /* Dark theme muted colours */
