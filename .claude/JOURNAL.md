@@ -123,3 +123,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 40. **Task - Release 1.1.24** (v1.1.24): published the campaign fixes and the template upgrade after the adversarial panel's final SHIP<br>
     **Result**: `make publish` built from the working tree and released 1.1.24 to npm and PyPI. The release carries nine fixed behaviours: a second browser window erasing colours, one file in two views losing its colour, the stock-colour flash on tab switches, a pick during document load overriding later picks and Clear, a claimed file tab losing its stored colour on reload, a pick or Clear not reaching the other view, a file name containing `Path: ` corrupting the stored key, reserved-prefix key collisions, and a claimed-view menu action deleting the shared entry. The claimed-tab contract changed: a claimed menu action writes nothing and the acted view keeps the user's choice for the session. The template moved to v4.6.5 and the Makefile to 1.46. Jest 134/134, pytest 12/12, Galata 44/44, lint 0 errors.
+
+41. **Task [Short] - Release 1.1.25** (v1.1.25): patch release on request with no code changes since 1.1.24<br>
+    **Result**: The tree was clean at `621e04e`; `make publish` raised 1.1.24 to 1.1.25 and published it to npm and PyPI. No functional changes.

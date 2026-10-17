@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.25
+
+### Changed
+
+- No functional changes - released on request with a clean tree since 1.1.24
+
 ## 1.1.24
 
 ### Fixed
