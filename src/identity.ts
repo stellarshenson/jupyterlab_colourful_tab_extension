@@ -3,6 +3,12 @@
 // brand-new tabs (DEF-6), and the suite green at the time never ran this logic.
 
 const TERMINAL_PREFIX = 'terminal:';
+// The sentinel carries a NUL, which no file path can contain, so the escaped
+// form cannot be produced by a real path. The previous prefix was `path:`,
+// itself a legal path prefix, and the two key spaces overlapped on paths
+// beginning `path:` (DEF-IDENT-22)
+const PATH_PREFIX = 'path:\u0000';
+const RAW_PATH_PREFIX = 'path:';
 
 /**
  * What a tab's colour is held as.
@@ -75,7 +81,17 @@ export function parseStoredColour(
  * null: their widget ids (`launcher-0`) are a per-browser-session counter, so
  * the first launcher of every session is always `launcher-0` and a colour
  * stored under it paints every future first launcher (DEF-6). Callers still
- * colour such tabs in the DOM; the colour just does not outlive the session.
+ * colour such tabs, holding the colour on the widget title; it lasts as long
+ * as the widget and is never stored.
+ *
+ * A path that begins with one of the storage prefixes is escaped with
+ * `path:` plus a NUL sentinel, so a legal root-level file named `terminal:3`
+ * is stored as `path:<NUL>terminal:3` rather than as the key of terminal 3.
+ * `path:` itself is escaped too. The sentinel is a NUL, which no file path can
+ * contain, so the escaped form is impossible to produce as a raw path; the
+ * earlier plain `path:` prefix was a legal path prefix and the two key spaces
+ * overlapped. The escape belongs to the path branch only; terminal keys
+ * remain `terminal:<name>`.
  *
  * @param titleAttr - the tab's `title` attribute; files carry `Path: <path>`
  * @param terminalSessionName - the terminal's session name, or null if not a terminal
@@ -85,14 +101,44 @@ export function stableTabId(
   terminalSessionName: string | null
 ): string | null {
   if (titleAttr && titleAttr.includes('Path:')) {
-    const pathMatch = titleAttr.match(/Path:\s*(.+?)(?:\n|$)/);
+    // Anchored to a line start: the docmanager caption is
+    // `Name: %1\nPath: %2\n`, so only the label on its own line is the path.
+    // Unanchored, a file NAME containing `Path: ` matched first and the key
+    // became the tail of the name, which two files in different directories
+    // can share
+    const pathMatch = titleAttr.match(/^Path:[ \t]*(.+?)(?:\n|$)/m);
     if (pathMatch && pathMatch[1]) {
-      return pathMatch[1].trim();
+      const path = pathMatch[1].trim();
+      return path.startsWith(TERMINAL_PREFIX) ||
+        path.startsWith(RAW_PATH_PREFIX)
+        ? `${PATH_PREFIX}${path}`
+        : path;
     }
   }
   return terminalSessionName
     ? `${TERMINAL_PREFIX}${terminalSessionName}`
     : null;
+}
+
+/**
+ * The current key for a stored id, rewriting the one legacy form the sentinel
+ * must not be confused with.
+ *
+ * A 1.1.22 store held a file path verbatim, so a key beginning `path:` was the
+ * file of that name. Read as a sentinel escape, it painted file `terminal:3`
+ * when it meant file `path:terminal:3`, while a key `path:3` matched no tab at
+ * all and its colour was lost. Rewriting at read time under the sentinel
+ * recovers the file the key recorded; the next save writes the current form.
+ * Applying it twice is a no-op: no legal path contains NUL, so a sentinel key
+ * is already final.
+ *
+ * @param storedId - one key exactly as it was read from storage
+ */
+export function normaliseStoredTabId(storedId: string): string {
+  return storedId.startsWith(RAW_PATH_PREFIX) &&
+    !storedId.startsWith(PATH_PREFIX)
+    ? `${PATH_PREFIX}${storedId}`
+    : storedId;
 }
 
 /** The terminal key for a session name, as stored. */

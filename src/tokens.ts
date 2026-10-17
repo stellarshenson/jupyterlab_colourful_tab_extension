@@ -33,14 +33,17 @@ export interface IColourfulTabs {
   /** Declare that another extension persists this tab's colour. The claim
    *  suppresses PERSISTENCE: the context menu still paints a claimed tab and
    *  still emits `colourChanged`, but writes nothing here, because the owner
-   *  writes the choice against a durable identity instead. A pick or a clear
-   *  does delete an entry already stored for the tab, since the user has just
-   *  replaced the choice that entry recorded and keeping it would repaint it
-   *  over the new one before the owner has filed it.
+   *  writes the choice against a durable identity instead. A pick or a clear on
+   *  a claimed tab writes nothing at all: the stored entry is the file's (or
+   *  terminal's) colour, shared by every view of it in every window, so it is
+   *  left for the other views, and the acted view is not repainted from it
+   *  again for the session unless a later unclaimed menu pick on that view
+   *  rewrites the stored entry.
    *
    *  A stored colour is still restored onto a tab that carries no colour class -
    *  the guard that has always been there - which for a claimed tab means its
-   *  owner has painted nothing. On a claimed tab it must also still match the
+   *  owner has painted nothing and the user has not picked or cleared that view
+   *  this session. On a claimed tab it must also still match the
    *  fingerprint of the terminal now behind its name, because an unverified
    *  entry is what a recycled terminal name leaves behind. The owner's colour
    *  therefore wins whenever it has one, and a verified earlier choice of the

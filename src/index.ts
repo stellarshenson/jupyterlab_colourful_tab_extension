@@ -21,6 +21,7 @@ import {
 } from './fingerprints';
 import {
   IStoredColour,
+  normaliseStoredTabId,
   parseStoredColour,
   stableTabId,
   staleTerminalIds,
@@ -59,8 +60,11 @@ const tabColours: Map<string, IStoredColour> = new Map();
  * Widget ids whose tab colour another extension owns, counted per widget (see
  * `IColourfulTabs`'s `claim`). A claimed tab is never persisted here, because
  * its owner persists the choice against a durable identity instead, and a pick
- * or a clear on one deletes whatever was stored for it before. It is still
- * repainted from a stored colour, but only from a fingerprint-verified entry.
+ * or a clear on one writes nothing at all: the stored entry is the file's (or
+ * terminal's) colour, shared by every view of it in every window, so it is
+ * left for the other views. The acted view is not repainted from it again for
+ * the session (see `suppressedClaimedViews`). A claimed tab is still repainted
+ * from a stored colour, but only from a fingerprint-verified entry.
  *
  * Counted rather than a set because two holders can own the same tab at once -
  * a panel rebuilt over a still-running terminal overlaps its predecessor - and
@@ -72,15 +76,29 @@ const tabColours: Map<string, IStoredColour> = new Map();
 const tabClaims: Map<string, number> = new Map();
 
 /**
+ * Claimed tab widgets the user has picked or cleared from the menu. The stored
+ * entry stays - it is the file's colour, which its other views rely on, in this
+ * window or another - so the owner-blank restore must not repaint it over the
+ * choice the user just made on this view. Session-scoped: a claimed choice is
+ * never persisted, and neither is this. A later unclaimed pick on that view
+ * rewrites the stored entry and releases the mark, because the entry the mark
+ * held back is no longer the one that could repaint over the choice.
+ */
+const suppressedClaimedViews = new Set<string>();
+
+/**
  * Live terminal fingerprints, or null while the server has not answered - "no
  * terminals" and "cannot tell" are different states and the prune needs both.
  */
 let terminalFingerprints: TerminalFingerprints | null = null;
 
 /**
- * Load tab colours from localStorage
+ * Load tab colours from localStorage, replacing the in-memory map. Runs at
+ * activation and before every write, because other windows on the same lab
+ * write the same key.
  */
 function loadTabColours(): void {
+  tabColours.clear();
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -91,7 +109,10 @@ function loadTabColours(): void {
         // prune and every repaint (see `parseStoredColour`)
         const entry = parseStoredColour(value, COLOURS.length);
         if (entry) {
-          tabColours.set(tabId, entry);
+          // A legacy key beginning `path:` was a raw file path; under the
+          // sentinel it is the escaped key of that same file (DEF-IDENT-22).
+          // Rewritten in memory on read, written back by the next save
+          tabColours.set(normaliseStoredTabId(tabId), entry);
         }
       });
     }
@@ -191,6 +212,7 @@ function isClaimedTab(tabElement: HTMLElement): boolean {
  * correctly survives.
  */
 function pruneStaleTerminalColours(liveNames: string[]): void {
+  loadTabColours();
   const stale = staleTerminalIds(tabColours, terminalFingerprints, liveNames);
   if (stale.length === 0) {
     return;
@@ -209,34 +231,35 @@ function pruneStaleTerminalColours(liveNames: string[]): void {
     // owner's colour and nothing repaints it until the owner's next pass.
     const entry = tabColours.get(id);
     const cssClass = entry ? COLOURS[entry.colour]?.cssClass : undefined;
-    const tabElement = currentTabs.get(id);
-    if (
-      cssClass &&
-      tabElement &&
-      !isClaimedTab(tabElement) &&
-      tabElement.classList.contains(cssClass)
-    ) {
-      clearTabColour(tabElement);
-    }
+    (currentTabs.get(id) ?? []).forEach(tabElement => {
+      if (
+        cssClass &&
+        !isClaimedTab(tabElement) &&
+        tabElement.classList.contains(cssClass)
+      ) {
+        clearTabColour(tabElement);
+      }
+    });
     tabColours.delete(id);
   });
   saveTabColours();
 }
 
 /**
- * Find all current tabs with their stable identifiers
+ * Find all current tabs with their stable identifiers. One file open in several
+ * views gives several tabs under one id.
  */
-function getAllTabsByStableId(): Map<string, HTMLElement> {
-  const idToTab = new Map<string, HTMLElement>();
+function getAllTabsByStableId(): Map<string, HTMLElement[]> {
+  const idToTabs = new Map<string, HTMLElement[]>();
   const tabs = document.querySelectorAll('#jp-main-dock-panel .lm-TabBar-tab');
   tabs.forEach(tab => {
     const tabElement = tab as HTMLElement;
     const stableId = getStableTabId(tabElement);
     if (stableId) {
-      idToTab.set(stableId, tabElement);
+      idToTabs.set(stableId, [...(idToTabs.get(stableId) ?? []), tabElement]);
     }
   });
-  return idToTab;
+  return idToTabs;
 }
 
 /**
@@ -249,16 +272,16 @@ function getAllTabsByStableId(): Map<string, HTMLElement> {
  * every prune, and an entry with no fingerprint or a fingerprint that no longer
  * matches is exactly what that leaves behind.
  *
- * A file path is not verifiable this way and does not need to be, so it answers
- * false here and is repainted on the unclaimed path alone.
+ * A file path is a real identity and needs no fingerprint, so it answers true
+ * by identity. The paint pass still gives the owner's own colour precedence:
+ * it skips any tab that already carries a colour class before this is asked.
  */
 function isVerifiedEntry(storedId: string, entry: IStoredColour): boolean {
   const name = terminalSessionName(storedId);
-  return (
-    name !== null &&
-    entry.fp !== undefined &&
-    entry.fp === terminalFingerprints?.[name]
-  );
+  if (name === null) {
+    return true;
+  }
+  return entry.fp !== undefined && entry.fp === terminalFingerprints?.[name];
 }
 
 /**
@@ -276,27 +299,31 @@ function isVerifiedEntry(storedId: string, entry: IStoredColour): boolean {
  * A claimed tab carrying no colour class is a tab whose owner has painted
  * nothing - the ordinary case for an owner that holds no colour for what runs
  * there - so the user's stored colour still shows there, but only from a
- * FINGERPRINT-VERIFIED entry. An unverified entry is what a recycled name
- * leaves behind, and painting one onto an assistant's tab is DEF-6 returning by
- * its visual half. The unclaimed path keeps the one guard it has always had:
- * narrowing it there would drop colours set before the fingerprint existed, and
- * every colour at all on a server without the route.
+ * FINGERPRINT-VERIFIED entry and only while the user has not picked or cleared
+ * that view from the menu this session, unless a later unclaimed pick on that
+ * view rewrote the entry and released the mark (see `suppressedClaimedViews`).
+ * An unverified entry is what a recycled name leaves behind, and painting one onto
+ * an assistant's tab is DEF-6 returning by its visual half. The unclaimed path
+ * keeps the one guard it has always had: narrowing it there would drop colours
+ * set before the fingerprint existed, and every colour at all on a server
+ * without the route.
  */
 function refreshAllTabColours(): void {
   const currentTabs = getAllTabsByStableId();
 
   tabColours.forEach((entry, storedId) => {
-    const tabElement = currentTabs.get(storedId);
-    if (
-      !tabElement ||
-      COLOURS.some(c => tabElement.classList.contains(c.cssClass))
-    ) {
-      return;
-    }
-    if (isClaimedTab(tabElement) && !isVerifiedEntry(storedId, entry)) {
-      return;
-    }
-    applyTabColour(tabElement, entry.colour);
+    (currentTabs.get(storedId) ?? []).forEach(tabElement => {
+      if (COLOURS.some(c => tabElement.classList.contains(c.cssClass))) {
+        return;
+      }
+      if (suppressedClaimedViews.has(tabElement.dataset.id ?? '')) {
+        return;
+      }
+      if (isClaimedTab(tabElement) && !isVerifiedEntry(storedId, entry)) {
+        return;
+      }
+      applyTabColour(tabElement, entry.colour);
+    });
   });
 }
 
@@ -319,6 +346,7 @@ function releaseMenuColour(widgetId: string): void {
     return;
   }
   const stableId = getStableTabId(tabElement);
+  loadTabColours();
   if (stableId && tabColours.has(stableId)) {
     tabColours.delete(stableId);
     saveTabColours();
@@ -423,15 +451,19 @@ class ColourfulTabs implements IColourfulTabs {
    * The claim suppresses PERSISTENCE: a menu pick on a claimed tab still paints
    * the tab and is still announced through `colourChanged`, but is not written
    * here, because the owner writes it against a durable identity instead. A
-   * pick or a clear does DELETE an entry already stored for the tab - the user
-   * has just replaced the choice that entry recorded, and keeping it would let
-   * it repaint over the new one in the window before the owner has filed it.
+   * pick or a clear on a claimed tab writes nothing at all - the stored entry
+   * is the file's (or terminal's) colour, shared by every view of it in every
+   * window, so it is left in place for the other views. The acted view is not
+   * repainted from it again for the session (see `suppressedClaimedViews`), so
+   * the user's choice is not undone before the owner has filed it.
    *
    * A stored colour is still restored onto a claimed tab carrying no colour
-   * class, which means its owner has painted nothing, but only when the entry's
-   * fingerprint matches the terminal now behind its name. The owner's colour
-   * therefore wins whenever it has one, a verified earlier choice shows when it
-   * does not, and nothing is transferred or copied.
+   * class, which means its owner has painted nothing and the user has not
+   * picked or cleared that view this session, but only when the entry's
+   * fingerprint matches the terminal now behind its name (a path key needs no
+   * fingerprint). The owner's colour therefore wins whenever it has one, a
+   * verified earlier choice shows when it does not, and nothing is transferred
+   * or copied.
    *
    * Claims are counted, so a second holder keeps the tab owned after the first
    * releases. `DisposableDelegate` runs its callback at most once, so disposing
@@ -550,6 +582,25 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     // choice through it
     const api = new ColourfulTabs();
 
+    // Lumino rewrites a tab's class attribute from the widget title whenever
+    // the tab becomes or stops being current, so a colour held only as a DOM
+    // class is lost unless something repaints it (DEF-IDENT-11). Every pick and
+    // Clear is therefore also held on the title; it lasts as long as the widget
+    // and is never written to localStorage - persistence stays with the
+    // stable-id entry below
+    const holdColourOnTitle = (
+      tabElement: HTMLElement,
+      colourId: string | null
+    ): void => {
+      const widgetId = tabElement.dataset.id;
+      const widget = widgetId
+        ? Array.from(app.shell.widgets('main')).find(w => w.id === widgetId)
+        : undefined;
+      if (widget) {
+        setWidgetTabColour(widget, colourId);
+      }
+    };
+
     // Track right-clicked tab using capture phase to get it before menu opens
     document.addEventListener(
       'contextmenu',
@@ -586,18 +637,32 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
           const tabElement = currentTabElement;
           const stableId = getStableTabId(tabElement);
           const claimed = isClaimedTab(tabElement);
-          // Everything the user's click decides - the paint, the announcement
-          // and the write - happens before anything is fetched. Putting the
-          // write behind the fetch instead lets a Clear or a second pick made
-          // in that window be overwritten by an answer about the first one
-          applyTabColour(tabElement, index);
+          // One file open in two views is two tabs under one stable id, and
+          // the stored entry is the file's, not the acted view's. The sibling
+          // list is read once for the view set below.
+          const siblings = stableId
+            ? (getAllTabsByStableId().get(stableId) ?? [])
+            : [];
+          // The colour and its title hold belong to the file, not to the view
+          // that was right-clicked; leaving the other view's title alone lets
+          // Lumino re-render it later with the colour of the earlier pick. A
+          // claimed sibling is skipped: its owner is the painter, and
+          // repainting it here would replace the owner's colour while
+          // colourChanged names only the acted widget. When the acted view
+          // itself is claimed, only it is painted.
+          const views =
+            stableId && !claimed
+              ? (siblings.length > 0 ? siblings : [tabElement]).filter(
+                  view => !isClaimedTab(view)
+                )
+              : [tabElement];
+          // Painted first so the click is visible before any work that can
+          // wait or fail
+          views.forEach(view => {
+            applyTabColour(view, index);
+            holdColourOnTitle(view, colour.id);
+          });
           applyToolbarColour();
-          // Emitted claimed or not: for a claimed tab this is the only record
-          // of the choice that leaves this extension at all
-          const widgetId = tabElement.dataset.id;
-          if (widgetId) {
-            api.emitChoice(widgetId, colour.id);
-          }
           // Persist only when the tab has a stable identity - storing under a
           // recyclable widget id would re-paint future tabs that reuse the id
           // (DEF-6) - and never for a claimed tab, whose owner persists the
@@ -607,6 +672,8 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
           // tab can be right-clicked. A name the map does not hold stores the
           // colour unverifiable, which is what an entry set against an
           // unreachable route already does
+          const widgetId = tabElement.dataset.id;
+          loadTabColours();
           if (stableId && !claimed) {
             const name = terminalSessionName(stableId);
             const fp = name === null ? undefined : terminalFingerprints?.[name];
@@ -615,15 +682,29 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
               fp === undefined ? { colour: index } : { colour: index, fp }
             );
             saveTabColours();
-          } else if (stableId && tabColours.has(stableId)) {
-            // A claimed tab stores nothing new, but an entry already held for
-            // it records the very choice this pick replaces. Kept, it repaints
-            // over the new colour as soon as Lumino rebuilds the tab's class
-            // attribute from the widget title, because the owner has not filed
-            // the new one yet - it holds the choice pending while the
-            // conversation is unreadable. Superseded state, deleted as such
-            tabColours.delete(stableId);
-            saveTabColours();
+            // The mark protected the OLD entry from repainting over the
+            // claimed-time choice. This pick replaced that entry, so the
+            // predicate is gone: a later API clear must show the colour stored
+            // here, not stay blank
+            views.forEach(view =>
+              suppressedClaimedViews.delete(view.dataset.id ?? '')
+            );
+          } else if (claimed && widgetId) {
+            // A claimed action writes nothing: the entry is the file's colour,
+            // which its other views rely on - in this window or another. The
+            // acted view is marked instead, so the owner-blank restore does not
+            // repaint the entry over the choice the user just made on it
+            suppressedClaimedViews.add(widgetId);
+          }
+          // Emitted claimed or not, and only after the write: a consumer
+          // answers this signal synchronously, and its `setColour` on an
+          // unclaimed tab drops the stored menu entry (releaseMenuColour).
+          // Announcing first would let the write above put that entry back, so
+          // the API set would not own the tab (ACC-ACTIVE-12). For a claimed
+          // tab this is the only record of the choice that leaves this
+          // extension at all
+          if (widgetId) {
+            api.emitChoice(widgetId, colour.id);
           }
         }
       });
@@ -639,18 +720,45 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
           currentTabElement &&
           currentTabElement.classList.contains('lm-TabBar-tab')
         ) {
-          // Clear the tab either way - a tab with no stable identity carries a
-          // session-only colour and must still be clearable. A claimed tab is
-          // not exempted from the delete, for the same reason a pick on one
-          // deletes: the entry records the choice this clear replaces, and
-          // keeping it would repaint it over the cleared tab as soon as Lumino
-          // rebuilds the class attribute from the widget title
+          // Clear the tab and its widget title either way. Only an unclaimed
+          // tab deletes the stored entry: a claimed clear writes nothing,
+          // because the entry is the file's colour shared by every view of it
+          // in every window and the other views rely on it. The acted claimed
+          // view is marked so the repaint pass does not restore the entry over
+          // the user's Clear for the rest of the session
+          const claimed = isClaimedTab(currentTabElement);
           const stableId = getStableTabId(currentTabElement);
+          const siblings = stableId
+            ? (getAllTabsByStableId().get(stableId) ?? [])
+            : [];
           if (stableId) {
-            tabColours.delete(stableId);
-            saveTabColours();
+            loadTabColours();
+            if (!claimed) {
+              tabColours.delete(stableId);
+              saveTabColours();
+            }
           }
-          clearTabColour(currentTabElement);
+          if (claimed) {
+            const claimedWidgetId = currentTabElement.dataset.id;
+            if (claimedWidgetId) {
+              suppressedClaimedViews.add(claimedWidgetId);
+            }
+          }
+          // As with a pick, one file open in two views is two tabs under one
+          // stable id: clear both, or the untouched view's title hold repaints
+          // the colour at its next Lumino re-render. A claimed sibling is
+          // skipped - its owner is the painter - and a claimed acted view
+          // clears only itself.
+          const views =
+            stableId && !claimed
+              ? (siblings.length > 0 ? siblings : [currentTabElement]).filter(
+                  view => !isClaimedTab(view)
+                )
+              : [currentTabElement];
+          views.forEach(view => {
+            holdColourOnTitle(view, null);
+            clearTabColour(view);
+          });
           applyToolbarColour();
           const widgetId = currentTabElement.dataset.id;
           if (widgetId) {
@@ -665,10 +773,14 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
       const observer = new MutationObserver(mutations => {
         // Check if any mutation affects tab elements
         const affectsTabs = mutations.some(mutation => {
-          // Check for class attribute changes on tabs
+          // Check for class and title attribute changes on tabs. A restored
+          // document tab gets its `Path:` title after `app.restored`, and for
+          // a background tab that title change is the only mutation that
+          // resolves its stable id (ACC-IDENT-23)
           if (
             mutation.type === 'attributes' &&
-            mutation.attributeName === 'class'
+            (mutation.attributeName === 'class' ||
+              mutation.attributeName === 'title')
           ) {
             const target = mutation.target as HTMLElement;
             return target.classList.contains('lm-TabBar-tab');
@@ -684,7 +796,13 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
           return false;
         });
 
+        // An observer callback runs as a microtask before the browser paints
+        // the frame in which Lumino rewrote the class, so repainting here
+        // leaves no frame in the stock colour; the debounced pass stays as the
+        // later pass it already was
         if (affectsTabs) {
+          refreshAllTabColours();
+          applyToolbarColour();
           debouncedRefresh();
         }
       });
@@ -695,7 +813,7 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['class']
+          attributeFilter: ['class', 'title']
         });
 
         // Initial application of colours

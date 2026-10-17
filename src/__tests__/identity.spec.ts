@@ -1,5 +1,6 @@
 import {
   IStoredColour,
+  normaliseStoredTabId,
   parseStoredColour,
   stableTabId,
   staleTerminalIds,
@@ -20,8 +21,46 @@ describe('stableTabId', () => {
     );
   });
 
+  it('anchors the Path: label, so a file name containing Path: is not the key', () => {
+    // Two files whose NAMES contain `Path: ` in different directories. The
+    // unanchored match landed inside the Name line, so both stored the tail of
+    // the name as one key and a colour followed the wrong file on reload
+    expect(
+      stableTabId('Name: My Path: notes.ipynb\nPath: /home/lab/x.ipynb', null)
+    ).toEqual('/home/lab/x.ipynb');
+    expect(
+      stableTabId(
+        'Name: Old Path: notes.ipynb\nPath: /home/lab/a/notes.ipynb',
+        null
+      )
+    ).not.toEqual(
+      stableTabId(
+        'Name: New Path: notes.ipynb\nPath: /home/lab/b/notes.ipynb',
+        null
+      )
+    );
+  });
+
   it('resolves a terminal tab to its session name', () => {
     expect(stableTabId(null, '3')).toEqual('terminal:3');
+  });
+
+  it('escapes a path that begins with a reserved storage prefix', () => {
+    // A root-level file named `terminal:3` is a legal file. Stored verbatim it
+    // shares the terminal key `terminal:3`, so the prune treats the file as a
+    // dead terminal and one pick paints both the file and terminal 3. The
+    // escape prefix carries a NUL, which no file path can contain, so the
+    // escaped form cannot be produced by a real path - the old `path:` prefix
+    // could, and collided with a raw path beginning `path:`
+    expect(stableTabId('Name: terminal:3\nPath: terminal:3', null)).toEqual(
+      'path:\u0000terminal:3'
+    );
+    expect(stableTabId('Name: terminal:3\nPath: terminal:3', null)).not.toEqual(
+      stableTabId(null, '3')
+    );
+    expect(stableTabId('Name: path:3\nPath: path:3', null)).toEqual(
+      'path:\u0000path:3'
+    );
   });
 
   it('returns null for a launcher - a widget id is not an identity (DEF-6)', () => {
@@ -33,6 +72,34 @@ describe('stableTabId', () => {
 
   it('returns null for a titled tab that is neither file nor terminal', () => {
     expect(stableTabId('Settings', null)).toBeNull();
+  });
+});
+
+describe('normaliseStoredTabId', () => {
+  it('reads a legacy path: key as the raw path it recorded', () => {
+    // A pre-1.1.23 store held a file's path verbatim, so `path:terminal:3`
+    // was the file of that name, not the escaped key of the file `terminal:3`
+    expect(normaliseStoredTabId('path:terminal:3')).toEqual(
+      'path:\u0000path:terminal:3'
+    );
+    expect(normaliseStoredTabId('path:3')).toEqual('path:\u0000path:3');
+    expect(normaliseStoredTabId('path:terminal:3')).toEqual(
+      stableTabId('Name: path:terminal:3\nPath: path:terminal:3', null)
+    );
+  });
+
+  it('leaves a terminal key alone', () => {
+    expect(normaliseStoredTabId('terminal:3')).toEqual('terminal:3');
+  });
+
+  it('leaves an escaped key alone and is idempotent', () => {
+    // No legal path contains NUL, so a key already carrying the sentinel is
+    // the current form; rewriting it again would corrupt it
+    const escaped = 'path:\u0000terminal:3';
+    expect(normaliseStoredTabId(escaped)).toEqual(escaped);
+    expect(normaliseStoredTabId(normaliseStoredTabId('path:3'))).toEqual(
+      'path:\u0000path:3'
+    );
   });
 });
 
@@ -114,6 +181,15 @@ describe('staleTerminalIds with fingerprints', () => {
     );
     expect(staleTerminalIds(entries, {}, [])).toEqual(['terminal:2']);
     expect(staleTerminalIds(entries, { '2': 'pty-a' }, ['2'])).toEqual([]);
+  });
+
+  it('never treats an escaped reserved-prefix path as a terminal key', () => {
+    // The escaped key is a file path, so the prune leaves it alone with and
+    // without fingerprints - though a real `terminal:3` entry carrying no
+    // fingerprint would be pruned in both cases
+    const entries = stored(['path:\u0000terminal:3', { colour: 2 }]);
+    expect(staleTerminalIds(entries, {}, ['3'])).toEqual([]);
+    expect(staleTerminalIds(entries, null, ['3'])).toEqual([]);
   });
 
   it('prunes only the disowned names when several terminals are stored', () => {

@@ -2,87 +2,563 @@
 
 Consolidated acceptance criteria for the extension. One `##` section per feature.
 
-## Contents
+## Authors
 
-- [Active Tab Colour](#active-tab-colour)
-- [Tab Identity and Colour Persistence](#tab-identity-and-colour-persistence)
+- `@kj` Konrad Jelen
 
-## Active Tab Colour
+## Active Tab Colour `ACTIVE`
 
-The selected dock tab (`.lm-mod-current`) carrying a colour class renders a distinct shade of that colour so it stands out from inactive coloured tabs. Dark theme = darker shade, light theme = brighter/more saturated shade. Implemented in `style/base.css` via per-colour `--jp-colourful-tab-<id>-active` variables and `.lm-mod-current.jp-colourful-tab-<id>` rules.
+The selected dock tab (`.lm-mod-current`) carrying a colour class renders a distinct shade of that colour so it stands out from inactive coloured tabs: darker in both themes, and more saturated as well in the light theme. Implemented in `style/base.css` via per-colour `--jp-colourful-tab-<id>-active` variables and `.lm-mod-current.jp-colourful-tab-<id>` rules.
 
-- [x] **Active variables (light)** - `:root` defines `--jp-colourful-tab-<id>-active` for all six colours, brighter/more saturated than the base
-  - log: 2026-07-15 implemented
-- [x] **Active variables (dark)** - `[data-jp-theme-light='false']` defines `--jp-colourful-tab-<id>-active` for all six colours, darker than the base
-  - log: 2026-07-15 implemented
-- [x] **Rule per colour** - `.lm-mod-current.jp-colourful-tab-<id>` sets background to the `-active` variable for rose, peach, lemon, mint, sky, lavender
-  - log: 2026-07-15 implemented
-- [x] **Coverage** - each active rule covers the tab element and its descendants (`*`); no `::part(positioning-region)` rule (dead for the active state - only web-component toolbars expose that part and they never carry `.lm-mod-current`)
-  - log: 2026-07-15 implemented
-  - log: 2026-07-15 removed dead active `::part` rules after CSS-correctness adversarial review
-  - log: 2026-07-15 correction - the removed rules were dead (toolbar never carries `.lm-mod-current`), but dropping toolbar handling entirely left the current widget's toolbar on the base shade (DEF-2); the toolbar now gets the active shade via `jp-toolbar`-scoped rules instead of `.lm-mod-current` ones
-- [x] **Specificity** - active selector (2 classes) overrides the base colour rule (1 class); both `!important`, so the current tab resolves to the active shade
-  - log: 2026-07-15 implemented
-- [x] **Build and lint** - `jlpm build` compiles and `jlpm run lint:check` (stylelint + prettier + eslint) passes with the new rules
-  - log: 2026-07-15 verified
-- [x] **Design decision: dark active is darker (recedes toward chrome)** - dark-theme active shade is deliberately darker than the base per explicit request; UX/contrast review flagged this as inverting the usual "current tab advances" cue (active fill 1.2-1.66:1 vs dark chrome, inactive base tabs pop more) but legibility stays safe (light-text contrast improves on selection); intentional - do not silently flip to lighter
-  - log: 2026-07-15 kept darker per user decision after adversarial UX review
-- [ ] **Accent preserved on API tint** - applying or clearing a colour via the public `setColour` API preserves the shell's `jp-mod-current` accent class (and any other `title.className` token); only the `jp-colourful-tab-*` token is swapped, so the selected-tab accent bar survives consumer re-tints (DEF-1)
-  - log: 2026-07-15 fixed - `setWidgetTabColour` tokenises `title.className` instead of overwriting it; unit-tested, runtime confirmation pending
-- [ ] **Toolbar matches active shade** - the current widget's `jp-toolbar` (the `::part(positioning-region)` strip below the tab) renders the `-active` shade so it matches the active tab, not the base shade; `jp-toolbar`-scoped rules override the base `::part` rule without affecting tabs (DEF-2)
-  - log: 2026-07-15 fixed - added six `jp-toolbar.jp-colourful-tab-<id>` `-active` rules; runtime confirmation pending
-- [ ] **Toolbar follows API colours** - a tab tinted via the public `setColour` API (not just the right-click menu) also colours its toolbar; `applyToolbarColour` reads the colour from the active tab's live `classList`, which both paths set, not from the menu-only `tabColours` map (DEF-3)
-  - log: 2026-07-15 fixed - `applyToolbarColour` derives colour from the tab class; runtime confirmation pending
-- [ ] **Toolbar pairs with its own panel** - in split layouts each panel's toolbar takes the colour of that panel's own current tab, matched via the shared widget id (tab `data-id` = widget node `id`); a coloured tab never paints another panel's toolbar, and widgets without a toolbar (terminals) colour nothing (DEF-4)
-  - log: 2026-07-16 fixed - `applyToolbarColour` pairs each current tab with its own widget's toolbar; runtime confirmation pending
-  - log: 2026-07-16 runtime check on 1.1.9 failed - flicker traced to interacting DEF-5; re-verify after that fix
-- [ ] **API colour is stable and owns the tab** - a tab tinted via the public `setColour` API keeps one steady colour: the menu map never overwrites a tab that already shows a colour class, and a non-null API set deletes any stored menu colour for that tab's stable id, so no flicker between the two paths and no stale menu colour resurfacing (DEF-5)
-  - log: 2026-07-16 fixed - refresh paints only colourless tabs + `releaseMenuColour` on API set; runtime confirmation pending
-- [ ] **Edge: stale menu colour on reused terminal id** - a menu colour stored under a reused `terminal:<n>` session name no longer attaches to an API-managed terminal once the API assigns a colour (entry purged); a colourless, non-API terminal with a stored id still restores its menu colour (persistence intact) (DEF-5)
-  - log: 2026-07-16 implemented, pending runtime verification
-- [ ] **Inactive unchanged** - a coloured tab without `.lm-mod-current` keeps its base shade
-  - log: 2026-07-15 implemented, pending runtime verification
-- [ ] **Visual dark** - selected coloured tab renders visibly darker than its inactive siblings in the dark theme
-  - log: 2026-07-15 pending runtime verification
-- [ ] **Visual light** - selected coloured tab renders visibly brighter/more saturated than its inactive siblings in the light theme
-  - log: 2026-07-15 pending runtime verification
-- [ ] **Text legibility** - tab label stays readable against the active shade in both themes
-  - log: 2026-07-15 pending runtime verification
-- [ ] **Selection follows focus** - switching the active tab moves the active shade to the newly-selected tab and restores the previous tab to its base shade
-  - log: 2026-07-15 pending runtime verification
-- [ ] **Edge: active tab has no colour** - selecting an uncoloured tab shows no active shade (no colour class present, rules do not match)
-  - log: 2026-07-15 implemented, pending runtime verification
-- [ ] **Edge: theme switch while active** - toggling light/dark re-resolves the `-active` variable so the active tab follows the new theme
-  - log: 2026-07-15 implemented, pending runtime verification
-- [ ] **Edge: toolbar shade** - the active notebook's `jp-toolbar` keeps the base colour, not the `-active` shade, since only `.lm-mod-current` tabs match the active rule; confirm acceptable
-  - log: 2026-07-15 known behaviour, pending confirmation
+- [x] `ACC-ACTIVE-1` **Active variables (light)** - HIGH; `:root` defines `--jp-colourful-tab-<id>-active` for all six colours, darker and more saturated than the base; the muted light palette since 1.1.21 (a user decision) sets WCAG luminance 0.564-0.569 -> 0.443-0.446 and HSL saturation +0.028 to +0.096
+  - mechanism: 2026-10-17T13:01:29Z @kj the `:root` block in `style/base.css` declares the 12 light variables the `.lm-mod-current.jp-colourful-tab-<id>` rules read; at runtime the injected dynamic style redefines them with the same schema-default values
+  - test-tags: UNIT
+  - evidence: jest `src/__tests__/visual.spec.ts` ':root defines a darker, more saturated -active shade for all six colours' passes; fails with rose-active `#f4d4dc` (luminance 0.715 above the base 0.568); jest 111/111
+  - test: read `:root` in `style/base.css`, assert `--jp-colourful-tab-<id>-active` for rose, peach, lemon, mint, sky, lavender, each with lower luminance and higher saturation than its base
+  - log: 2026-07-15T00:00:00Z @kj implemented
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "read `:root` in `style/base.css`, assert `--jp-colourful-tab-<id>-active` for rose, peach, lemon, mint, sky, lavender"
+  - log: 2026-10-17T10:31:13Z @kj edited evidence added "`style/base.css` lines 17-22 define all six under `:root`; each more saturated than its base (HSL S +0.028 to +0.096) but darker (luminance 0.564-0.569 -> 0.443-0.446); read 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj amended text "`:root` defines `--jp-colourful-tab-<id>-active` for all six colours, brighter/more saturated than the base" -> "`:root` defines `--jp-colourful-tab-<id>-active` for all six colours, darker and more saturated than the base; the muted light palette since 1.1.21 (a user decision) sets WCAG luminance 0.564-0.569 -> 0.443-0.446 and HSL saturation +0.028 to +0.096"
+  - log: 2026-10-17T13:01:29Z @kj edited test "read `:root` in `style/base.css`, assert `--jp-colourful-tab-<id>-active` for rose, peach, lemon, mint, sky, lavender" -> "read `:root` in `style/base.css`, assert `--jp-colourful-tab-<id>-active` for rose, peach, lemon, mint, sky, lavender, each with lower luminance and higher saturation than its base"; test-tags added "UNIT"; evidence "`style/base.css` lines 17-22 define all six under `:root`; each more saturated than its base (HSL S +0.028 to +0.096) but darker (luminance 0.564-0.569 -> 0.443-0.446); read 2026-10-17" -> "jest `src/__tests__/visual.spec.ts` ':root defines a darker, more saturated -active shade for all six colours' passes; fails with rose-active `#f4d4dc` (luminance 0.715 above the base 0.568); jest 111/111"
+- [x] `ACC-ACTIVE-2` **Active variables (dark)** - HIGH; `[data-jp-theme-light='false']` defines `--jp-colourful-tab-<id>-active` for all six colours, darker than the base
+  - mechanism: 2026-10-17T13:01:29Z @kj `[data-jp-theme-light='false']` in `style/base.css` redefines the six `-active` variables below their base; the theme manager sets that attribute, and the injected dynamic style repeats the same values from `DEFAULT_PALETTE`
+  - test-tags: UNIT, E2E
+  - evidence: jest dynamicStyle.spec.ts 'style/base.css variables equal DEFAULT_PALETTE' pins the six dark values; Galata visual.spec.ts 'coloured tabs, dark theme' 'the -active shade follows the selection between same-coloured tabs' passes: each selected tab has lower luminance than its sibling; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: read `[data-jp-theme-light='false']` in `style/base.css`, assert all six `-active` variables, each darker than its base
+  - log: 2026-07-15T00:00:00Z @kj implemented
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "read `[data-jp-theme-light='false']` in `style/base.css`, assert all six `-active` variables, each darker than its base"
+  - log: 2026-10-17T10:31:13Z @kj edited evidence added "`style/base.css` lines 35-40 define all six under `[data-jp-theme-light='false']`, each darker than its base (rose luminance 0.041 -> 0.0225); read 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj edited test-tags added "UNIT, E2E"; evidence "`style/base.css` lines 35-40 define all six under `[data-jp-theme-light='false']`, each darker than its base (rose luminance 0.041 -> 0.0225); read 2026-10-17" -> "jest dynamicStyle.spec.ts 'style/base.css variables equal DEFAULT_PALETTE' pins the six dark values; Galata visual.spec.ts 'coloured tabs, dark theme' 'the -active shade follows the selection between same-coloured tabs' passes: each selected tab has lower luminance than its sibling; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-ACTIVE-3` **Rule per colour** - HIGH; `.lm-mod-current.jp-colourful-tab-<id>` sets background to the `-active` variable for rose, peach, lemon, mint, sky, lavender
+  - mechanism: 2026-10-17T13:01:29Z @kj one `.lm-mod-current.jp-colourful-tab-<id>` rule per colour in `style/base.css` sets `background-color: var(--jp-colourful-tab-<id>-active) !important`; Lumino puts `lm-mod-current` on the current tab only
+  - test-tags: E2E
+  - evidence: Galata visual.spec.ts 'the -active shade follows the selection between same-coloured tabs' (light, dark) passes: the selected tab computes the -active hex for all six colours; fails with the rose `.lm-mod-current` rule removed; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: read `style/base.css`, assert one `.lm-mod-current.jp-colourful-tab-<id>` rule per colour on its `-active` variable
+  - log: 2026-07-15T00:00:00Z @kj implemented
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "read `style/base.css`, assert one `.lm-mod-current.jp-colourful-tab-<id>` rule per colour on its `-active` variable"
+  - log: 2026-10-17T10:31:13Z @kj edited evidence added "`style/base.css` holds six `.lm-mod-current.jp-colourful-tab-<id>` rules, one per colour, each on its `-active` variable; read 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj edited test-tags added "E2E"; evidence "`style/base.css` holds six `.lm-mod-current.jp-colourful-tab-<id>` rules, one per colour, each on its `-active` variable; read 2026-10-17" -> "Galata visual.spec.ts 'the -active shade follows the selection between same-coloured tabs' (light, dark) passes: the selected tab computes the -active hex for all six colours; fails with the rose `.lm-mod-current` rule removed; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-ACTIVE-4` **Coverage** - MEDIUM; each active rule covers the tab element and its descendants (`*`); no `::part(positioning-region)` rule (dead for the active state - only web-component toolbars expose that part and they never carry `.lm-mod-current`)
+  - mechanism: 2026-10-17T13:01:29Z @kj each `.lm-mod-current` selector list names the tab and `<tab> *`; the toolbar strip takes its -active shade from the `jp-toolbar.jp-colourful-tab-<id>` rules instead, since a `jp-toolbar` never carries `lm-mod-current`
+  - test-tags: E2E, MANUAL
+  - evidence: Galata visual.spec.ts 'the label reaches WCAG AA contrast on every shade' (light, dark) passes: the label, a descendant of the selected tab, computes the -active hex; `style/base.css` read 2026-10-17: no `.lm-mod-current` rule targets `::part(positioning-region)`; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: read `style/base.css`, assert each `.lm-mod-current` rule lists the tab and `*` and none targets `::part(positioning-region)`
+  - log: 2026-07-15T00:00:00Z @kj implemented
+  - log: 2026-07-15T00:00:00Z @kj removed dead active `::part` rules after CSS-correctness adversarial review
+  - log: 2026-07-15T00:00:00Z @kj correction - the removed rules were dead (toolbar never carries `.lm-mod-current`), but dropping toolbar handling entirely left the current widget's toolbar on the base shade (DEF-2); the toolbar now gets the active shade via `jp-toolbar`-scoped rules instead of `.lm-mod-current` ones
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "read `style/base.css`, assert each `.lm-mod-current` rule lists the tab and `*` and none targets `::part(positioning-region)`"
+  - log: 2026-10-17T10:31:13Z @kj edited evidence added "all six `.lm-mod-current` rules in `style/base.css` list the tab and `*`, none targets `::part(positioning-region)`; read 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj edited test-tags added "E2E, MANUAL"; evidence "all six `.lm-mod-current` rules in `style/base.css` list the tab and `*`, none targets `::part(positioning-region)`; read 2026-10-17" -> "Galata visual.spec.ts 'the label reaches WCAG AA contrast on every shade' (light, dark) passes: the label, a descendant of the selected tab, computes the -active hex; `style/base.css` read 2026-10-17: no `.lm-mod-current` rule targets `::part(positioning-region)`; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-ACTIVE-5` **Specificity** - MEDIUM; active selector (2 classes) overrides the base colour rule (1 class); both `!important`, so the current tab resolves to the active shade
+  - mechanism: 2026-10-17T13:01:29Z @kj `.lm-mod-current.jp-colourful-tab-<id>` (2 classes) outranks `.jp-colourful-tab-<id>` (1 class); both carry `!important`, so specificity decides
+  - test-tags: E2E
+  - evidence: Galata visual.spec.ts 'the -active shade follows the selection between same-coloured tabs' (light, dark) passes: the selected tab computes the -active hex although it also matches the base rule; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: colour a tab, select it, assert its computed background equals the `-active` value
+  - log: 2026-07-15T00:00:00Z @kj implemented
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "colour a tab, select it, assert its computed background equals the `-active` value"
+  - log: 2026-10-17T10:31:13Z @kj edited evidence added "`style/base.css`: `.lm-mod-current.jp-colourful-tab-<id>` (2 classes) and `.jp-colourful-tab-<id>` (1 class) both set background with `!important`; read 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj edited test-tags added "E2E"; evidence "`style/base.css`: `.lm-mod-current.jp-colourful-tab-<id>` (2 classes) and `.jp-colourful-tab-<id>` (1 class) both set background with `!important`; read 2026-10-17" -> "Galata visual.spec.ts 'the -active shade follows the selection between same-coloured tabs' (light, dark) passes: the selected tab computes the -active hex although it also matches the base rule; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-ACTIVE-6` **Build and lint** - CRITICAL; `jlpm build` compiles and `jlpm run lint:check` (stylelint + prettier + eslint) passes with the new rules
+  - mechanism: 2026-10-17T13:01:29Z @kj `jlpm build` runs `tsc --sourceMap` then `jupyter-builder build --development True .`; `lint:check` runs stylelint, `prettier --check` and eslint; the CI build job runs `jlpm run lint:check`, `jlpm run test` and `python -m build`
+  - test-tags: CI
+  - evidence: ledger stage 2026-10-17: `jlpm build` exit 0, source bundle `remoteEntry.dada9604630ca255.js` (`logs/build-ledger-pre.log`); `jlpm run lint:check` 0 errors, 7 warnings (`logs/lint-ledger-pre.log`); `.github/workflows/build.yml` runs both on every push
+  - test: run `jlpm build` and `jlpm run lint:check`, assert both exit 0
+  - log: 2026-07-15T00:00:00Z @kj verified
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "CRITICAL"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "run `jlpm build` and `jlpm run lint:check`, assert both exit 0"
+  - log: 2026-10-17T10:31:14Z @kj edited evidence added "1.1.23 built and installed in `logs/upgrade-install.log`; `jlpm run lint:check` 0 errors, 7 warnings in `logs/upgrade-lint.log`; 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj edited test-tags added "CI"; evidence "1.1.23 built and installed in `logs/upgrade-install.log`; `jlpm run lint:check` 0 errors, 7 warnings in `logs/upgrade-lint.log`; 2026-10-17" -> "ledger stage 2026-10-17: `jlpm build` exit 0, source bundle `remoteEntry.dada9604630ca255.js` (`logs/build-ledger-pre.log`); `jlpm run lint:check` 0 errors, 7 warnings (`logs/lint-ledger-pre.log`); `.github/workflows/build.yml` runs both on every push"
+- [x] `ACC-ACTIVE-7` **Design decision: dark active is darker (recedes toward chrome)** - MEDIUM; dark-theme active shade is deliberately darker than the base per explicit request; UX/contrast review flagged this as inverting the usual "current tab advances" cue (active fill 1.2-1.66:1 vs dark chrome, inactive base tabs pop more) but legibility stays safe (light-text contrast improves on selection); intentional - do not silently flip to lighter
+  - mechanism: 2026-10-17T13:01:30Z @kj the six dark `-active` hexes in `style/base.css` and `DEFAULT_PALETTE.dark` sit below their base in luminance; kept on purpose per user decision
+  - test-tags: E2E
+  - evidence: Galata visual.spec.ts 'coloured tabs, dark theme' 'the -active shade follows the selection between same-coloured tabs' passes: for all six colours relativeLuminance(selected) < relativeLuminance(sibling); Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: dark theme: compare each `-active` hex with its base, assert lower luminance
+  - log: 2026-07-15T00:00:00Z @kj kept darker per user decision after adversarial UX review
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:04Z @kj edited test added "dark theme: compare each `-active` hex with its base, assert lower luminance"
+  - log: 2026-10-17T10:31:14Z @kj edited evidence added "all six dark `-active` hexes in `style/base.css` lines 35-40 are darker than their base (luminance 0.0391-0.0688 -> 0.022-0.0386); read 2026-10-17"
+  - log: 2026-10-17T13:01:29Z @kj edited test-tags added "E2E"; evidence "all six dark `-active` hexes in `style/base.css` lines 35-40 are darker than their base (luminance 0.0391-0.0688 -> 0.022-0.0386); read 2026-10-17" -> "Galata visual.spec.ts 'coloured tabs, dark theme' 'the -active shade follows the selection between same-coloured tabs' passes: for all six colours relativeLuminance(selected) < relativeLuminance(sibling); Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-ACTIVE-8` **Accent preserved on API tint** - HIGH; applying or clearing a colour via the public `setColour` API preserves the shell's `jp-mod-current` accent class (and any other `title.className` token); only the `jp-colourful-tab-*` token is swapped, so the selected-tab accent bar survives consumer re-tints (DEF-ACTIVE-1)
+  - evidence: jest accent.spec.ts 'keeps jp-mod-current and other title tokens across tint, re-tints and clear' 2/2 (claimed false, true); Galata accent.spec.ts 'accent bar survives setColour tint, re-tints and clear' passes; both fail under the wholesale `title.className` overwrite; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-ACTIVE-1 - the defect this criterion guards
+  - mechanism: 2026-10-17T13:01:30Z @kj `ColourfulTabs.setColour` calls `setWidgetTabColour` on the claimed and the unclaimed branch; it splits `title.className`, removes the six `jp-colourful-tab-*` tokens, appends the new one and keeps every other token; Lumino renders the tab class from `title.className`, so `jp-mod-current` and its `::before` accent bar survive
+  - test-tags: UNIT, E2E
+  - test: tint a tab via `setColour`, select it, tint again, assert `title.className` still holds `jp-mod-current`
+  - log: 2026-07-15T00:00:00Z @kj fixed - `setWidgetTabColour` tokenises `title.className` instead of overwriting it; unit-tested, runtime confirmation pending
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "tint a tab via `setColour`, select it, tint again, assert `title.className` still holds `jp-mod-current`"
+  - log: 2026-10-17T13:01:30Z @kj amended text "applying or clearing a colour via the public `setColour` API preserves the shell's `jp-mod-current` accent class (and any other `title.className` token); only the `jp-colourful-tab-*` token is swapped, so the selected-tab accent bar survives consumer re-tints (DEF-1)" -> "applying or clearing a colour via the public `setColour` API preserves the shell's `jp-mod-current` accent class (and any other `title.className` token); only the `jp-colourful-tab-*` token is swapped, so the selected-tab accent bar survives consumer re-tints (DEF-ACTIVE-1)"
+  - log: 2026-10-17T13:01:30Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:01Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-9` **Toolbar matches active shade** - MEDIUM; the current widget's `jp-toolbar` (the `::part(positioning-region)` strip below the tab) renders the `-active` shade so it matches the active tab, not the base shade; `jp-toolbar`-scoped rules override the base `::part` rule without affecting tabs (DEF-TOOL-2)
+  - evidence: Galata toolbar-strip.spec.ts 'menu colour follows the current tab across switches' (light, dark) passes: toolbar host and `::part(positioning-region)` equal the -active value, the inactive coloured tab keeps the base value; fails with the `::part` -active rule removed; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-TOOL-2 - the defect this criterion guards
+  - overrides: ACC-ACTIVE-21
+  - mechanism: 2026-10-17T13:44:15Z @kj `applyToolbarColour` copies the current tab's `jp-colourful-tab-<id>` class onto its own widget's first `jp-toolbar`; `jp-toolbar.jp-colourful-tab-<id>` rules (host and `::part(positioning-region)`) paint `--jp-colourful-tab-<id>-active` and outrank the base `::part` rule by one type selector; tabs are `<li>` and never match
+  - mechanism: 2026-10-17T13:01:30Z @kj `applyToolbarColour` copies the current tab's `jp-colourful-tab-<id>` class onto its own widget's first `jp-toolbar`; `jp-toolbar.jp-colourful-tab-<id>` rules (host, `*`, `::part(positioning-region)`) paint `--jp-colourful-tab-<id>-active` and outrank the base `::part` rule by one type selector; tabs are `<li>` and never match
+  - test-tags: E2E
+  - test: colour a notebook tab, select it, assert its `jp-toolbar` `::part(positioning-region)` background equals the `-active` value
+  - log: 2026-07-15T00:00:00Z @kj fixed - added six `jp-toolbar.jp-colourful-tab-<id>` `-active` rules; runtime confirmation pending
+  - log: 2026-10-17T10:30:47Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "colour a notebook tab, select it, assert its `jp-toolbar` `::part(positioning-region)` background equals the `-active` value"
+  - log: 2026-10-17T13:01:30Z @kj amended text "the current widget's `jp-toolbar` (the `::part(positioning-region)` strip below the tab) renders the `-active` shade so it matches the active tab, not the base shade; `jp-toolbar`-scoped rules override the base `::part` rule without affecting tabs (DEF-2)" -> "the current widget's `jp-toolbar` (the `::part(positioning-region)` strip below the tab) renders the `-active` shade so it matches the active tab, not the base shade; `jp-toolbar`-scoped rules override the base `::part` rule without affecting tabs (DEF-TOOL-2)"
+  - log: 2026-10-17T13:01:30Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:44:15Z @kj mechanism overridden; reason: DEF-TOOL-10 removed the `jp-toolbar` `*` rule
+- [x] `ACC-ACTIVE-10` **Toolbar follows API colours** - MEDIUM; a tab tinted via the public `setColour` API (not just the right-click menu) also colours its toolbar; `applyToolbarColour` reads the colour from the active tab's live `classList`, which both paths set, not from the menu-only `tabColours` map (DEF-TOOL-3)
+  - evidence: Galata toolbar-strip.spec.ts 'API colour reaches the strip, terminal included' (light, dark): setColour-only notebook and terminal carry the tab's `jp-colourful-tab-*` class on their own `jp-toolbar` with the -active shade; 'clearing the tab colour clears its strip' passes; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-TOOL-3 - the defect this criterion guards
+  - mechanism: 2026-10-17T13:01:30Z @kj `applyToolbarColour` reads the colour from the current tab's live classList, which the menu path sets via classList and the API path via `title.className` rendered by Lumino; every tab class mutation runs it through the 50 ms debounced refresh
+  - test-tags: E2E
+  - test: tint a notebook via `setColour` only, select it, assert its `jp-toolbar` carries the same `jp-colourful-tab-*` class
+  - log: 2026-07-15T00:00:00Z @kj fixed - `applyToolbarColour` derives colour from the tab class; runtime confirmation pending
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "tint a notebook via `setColour` only, select it, assert its `jp-toolbar` carries the same `jp-colourful-tab-*` class"
+  - log: 2026-10-17T13:01:30Z @kj amended text "a tab tinted via the public `setColour` API (not just the right-click menu) also colours its toolbar; `applyToolbarColour` reads the colour from the active tab's live `classList`, which both paths set, not from the menu-only `tabColours` map (DEF-3)" -> "a tab tinted via the public `setColour` API (not just the right-click menu) also colours its toolbar; `applyToolbarColour` reads the colour from the active tab's live `classList`, which both paths set, not from the menu-only `tabColours` map (DEF-TOOL-3)"
+  - log: 2026-10-17T13:01:30Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-11` **Toolbar pairs with its own panel** - HIGH; in split layouts each panel's toolbar takes the colour of that panel's own current tab, matched via the shared widget id (tab `data-id` = widget node `id`); a coloured tab never paints another panel's toolbar; a widget with no `jp-toolbar` of its own colours none, and a terminal, which on JupyterLab 4.6.4 has its own `jp-toolbar` like every `MainAreaWidget`, colours only its own (DEF-TOOL-4)
+  - evidence: Galata toolbar-strip.spec.ts 'split: each panel strip takes its own tab colour' and 'split: a tab without a toolbar paints no other panel' (light, dark) pass; both fail under the pre-1.1.9 first-visible-toolbar pairing; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-TOOL-4 - the defect this criterion guards
+  - mechanism: 2026-10-17T13:01:31Z @kj for each `#jp-main-dock-panel .lm-TabBar-tab.lm-mod-current` (one per tab bar) `applyToolbarColour` colours only `document.getElementById(tab.dataset.id)?.querySelector('jp-toolbar')`, after clearing every toolbar
+  - test-tags: E2E
+  - test: split the main area, colour the current tab in one panel, assert the other panel's `jp-toolbar` has no colour class
+  - log: 2026-07-16T00:00:00Z @kj fixed - `applyToolbarColour` pairs each current tab with its own widget's toolbar; runtime confirmation pending
+  - log: 2026-07-16T00:00:00Z @kj runtime check on 1.1.9 failed - flicker traced to interacting DEF-5; re-verify after that fix
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "split the main area, colour the current tab in one panel, assert the other panel's `jp-toolbar` has no colour class"
+  - log: 2026-10-17T13:01:31Z @kj amended text "in split layouts each panel's toolbar takes the colour of that panel's own current tab, matched via the shared widget id (tab `data-id` = widget node `id`); a coloured tab never paints another panel's toolbar, and widgets without a toolbar (terminals) colour nothing (DEF-4)" -> "in split layouts each panel's toolbar takes the colour of that panel's own current tab, matched via the shared widget id (tab `data-id` = widget node `id`); a coloured tab never paints another panel's toolbar; a widget with no `jp-toolbar` of its own colours none, and a terminal, which on JupyterLab 4.6.4 has its own `jp-toolbar` like every `MainAreaWidget`, colours only its own (DEF-TOOL-4)"; reason: the old body said terminals have no toolbar, false on JupyterLab 4.6.4 where every MainAreaWidget builds a jp-toolbar; id DEF-4 is now DEF-TOOL-4
+  - log: 2026-10-17T13:01:31Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-12` **API colour is stable and owns the tab** - HIGH; a tab tinted via the public `setColour` API keeps one steady colour: the menu map never overwrites a tab that already shows a colour class, and a non-null API set on an unclaimed tab deletes any stored menu colour for that tab's stable id, so the two paths do not cause flicker and a stale menu colour does not resurface when the API colour is cleared; a claimed tab keeps its stored entry under the claim rules (DEF-COLOUR-5)
+  - evidence: Galata api.spec.ts 'API colour on an unclaimed terminal purges the menu colour and holds' and 'a claimed terminal keeps the owner's colour over its verified menu colour' pass (10 title updates, sky only); jest api.spec.ts 'never repaints a stored colour over the colour an unclaimed tab shows' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-COLOUR-5 - the defect this criterion guards
+  - mechanism: 2026-10-17T17:09:52Z @kj the pick command writes the menu entry before it emits colourChanged, so a consumer that answers the signal synchronously with setColour on an unclaimed tab drops the entry last
+  - mechanism: 2026-10-17T13:01:31Z @kj `refreshAllTabColours` returns early for any tab that carries a `jp-colourful-tab-*` class; `ColourfulTabs.setColour` calls `releaseMenuColour` (delete and save of the entry under the tab's stable id) when colourId is non-null and the widget is not in `tabClaims`
+  - test-tags: UNIT, E2E
+  - test: store a menu colour for a terminal, tint it via `setColour`, change its title 10 times, assert one colour class throughout
+  - log: 2026-07-16T00:00:00Z @kj fixed - refresh paints only colourless tabs + `releaseMenuColour` on API set; runtime confirmation pending
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "store a menu colour for a terminal, tint it via `setColour`, change its title 10 times, assert one colour class throughout"
+  - log: 2026-10-17T13:01:31Z @kj amended text "a tab tinted via the public `setColour` API keeps one steady colour: the menu map never overwrites a tab that already shows a colour class, and a non-null API set deletes any stored menu colour for that tab's stable id, so no flicker between the two paths and no stale menu colour resurfacing (DEF-5)" -> "a tab tinted via the public `setColour` API keeps one steady colour: the menu map never overwrites a tab that already shows a colour class, and a non-null API set on an unclaimed tab deletes any stored menu colour for that tab's stable id, so the two paths do not cause flicker and a stale menu colour does not resurface when the API colour is cleared; a claimed tab keeps its stored entry under the claim rules (DEF-COLOUR-5)"; reason: the old body said a non-null API set always deletes the stored entry; since v1.1.20 that holds only on unclaimed tabs, because setColour on a claimed tab keeps the entry by design
+  - log: 2026-10-17T13:01:31Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata api.spec.ts 'API colour on an unclaimed terminal purges the menu colour and holds' and 'a claimed terminal keeps the owner's colour over its verified menu colour' pass (10 title updates, sky only); jest api.spec.ts 'never repaints a stored colour over the colour an unclaimed tab shows' passes; jest 111/111" -> "Galata api.spec.ts 'API colour on an unclaimed terminal purges the menu colour and holds' and 'a claimed terminal keeps the owner's colour over its verified menu colour' pass (10 title updates, sky only); jest api.spec.ts 'never repaints a stored colour over the colour an unclaimed tab shows' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-ACTIVE-13` **Edge: stale menu colour on reused terminal id** - MEDIUM; a menu colour stored under a reused `terminal:<n>` session name no longer attaches to a terminal the API tints without a claim: the first non-null `setColour` deletes the entry, so clearing the API colour leaves the tab clear; a colourless, non-API terminal with a stored id still restores its menu colour on reload (persistence intact) (DEF-COLOUR-5)
+  - evidence: Galata api.spec.ts 'API colour on an unclaimed terminal purges the menu colour and holds' (entry gone, tab clear after the API clears) and 'a menu colour on a terminal the API never touched returns after reload' pass; jest 'still drops the stored colour when setColour paints an unclaimed tab' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-COLOUR-5 - the defect this criterion guards
+  - mechanism: 2026-10-17T13:01:31Z @kj `releaseMenuColour` resolves the tab's stable id (`terminal:<session name>` through the terminal tracker) and deletes that entry; on a colourless tab `refreshAllTabColours` repaints the entries `loadTabColours` read from `jupyterlab-colourful-tab-colours` at activation
+  - test-tags: UNIT, E2E
+  - test: store a menu colour for `terminal:<n>`, tint it via `setColour`, assert the entry is gone; without the API, assert the colour returns on reload
+  - log: 2026-07-16T00:00:00Z @kj implemented, pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "store a menu colour for `terminal:<n>`, tint it via `setColour`, assert the entry is gone; without the API, assert the colour returns on reload"
+  - log: 2026-10-17T13:01:31Z @kj amended text "a menu colour stored under a reused `terminal:<n>` session name no longer attaches to an API-managed terminal once the API assigns a colour (entry purged); a colourless, non-API terminal with a stored id still restores its menu colour (persistence intact) (DEF-5)" -> "a menu colour stored under a reused `terminal:<n>` session name no longer attaches to a terminal the API tints without a claim: the first non-null `setColour` deletes the entry, so clearing the API colour leaves the tab clear; a colourless, non-API terminal with a stored id still restores its menu colour on reload (persistence intact) (DEF-COLOUR-5)"; reason: the old body said the entry is purged once the API assigns a colour; since v1.1.20 that holds only for unclaimed tabs, and claimed tabs follow the claim rules
+  - log: 2026-10-17T13:01:31Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata api.spec.ts 'API colour on an unclaimed terminal purges the menu colour and holds' (entry gone, tab clear after the API clears) and 'a menu colour on a terminal the API never touched returns after reload' pass; jest 'still drops the stored colour when setColour paints an unclaimed tab' passes; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata api.spec.ts 'API colour on an unclaimed terminal purges the menu colour and holds' (entry gone, tab clear after the API clears) and 'a menu colour on a terminal the API never touched returns after reload' pass; jest 'still drops the stored colour when setColour paints an unclaimed tab' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-ACTIVE-14` **Inactive unchanged** - HIGH; a coloured tab without `.lm-mod-current` keeps its base shade
+  - evidence: Galata visual.spec.ts 'the -active shade follows the selection between same-coloured tabs' (light, dark) passes: for all six colours the inactive same-coloured sibling computes the schema inactive hex, also while hovered; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:44:15Z @kj the base rule `.jp-colourful-tab-<id>, .lm-TabBar-tab.jp-colourful-tab-<id> *` paints `var(--jp-colourful-tab-<id>)` with `!important`; the -active rule needs `.lm-mod-current`, which Lumino sets only on the current tab, and wins over the equally specific `*` rule by coming later in `style/base.css`; `!important` outranks JupyterLab's hover fill
+  - mechanism: 2026-10-17T13:01:31Z @kj the base rule `.jp-colourful-tab-<id>, .jp-colourful-tab-<id> *` paints `var(--jp-colourful-tab-<id>)` with `!important`; the -active rule needs `.lm-mod-current`, which Lumino sets only on the current tab, and `!important` outranks JupyterLab's hover fill
+  - test-tags: E2E
+  - test: colour two tabs, select one, assert the other's background equals the base value
+  - log: 2026-07-15T00:00:00Z @kj implemented, pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "colour two tabs, select one, assert the other's background equals the base value"
+  - log: 2026-10-17T13:01:31Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:44:15Z @kj mechanism overridden; reason: DEF-TOOL-10 scoped the `*` selector to dock tabs
+- [x] `ACC-ACTIVE-15` **Visual dark** - MEDIUM; selected coloured tab renders visibly darker than its inactive siblings in the dark theme
+  - evidence: Galata visual.spec.ts 'coloured tabs, dark theme' 'the -active shade follows the selection between same-coloured tabs' passes: for all six colours the selected tab computes the dark -active hex and has lower luminance than its sibling; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:32Z @kj `[data-jp-theme-light='false']` redefines each `-active` variable to a shade below its base (luminance 0.022-0.039 against 0.039-0.069), and `.lm-mod-current.jp-colourful-tab-<id>` paints the current tab with it
+  - test-tags: E2E
+  - test: dark theme: colour two tabs the same, select one, assert its background is darker than the other's
+  - log: 2026-07-15T00:00:00Z @kj pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "dark theme: colour two tabs the same, select one, assert its background is darker than the other's"
+  - log: 2026-10-17T13:01:32Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-16` **Visual light** - MEDIUM; selected coloured tab renders visibly darker and more saturated than its inactive siblings in the light theme; the muted light palette since 1.1.21 (a user decision) puts the selected shade at CIELAB L* 72.5, C* 28 (lemon and mint C* 38) against the inactive L* 80, C* 18 - WCAG luminance 0.443-0.446 against 0.564-0.569
+  - evidence: Galata visual.spec.ts 'coloured tabs, light theme' 'the -active shade follows the selection between same-coloured tabs' passes: for all six colours the selected tab computes the light -active hex, with lower luminance and higher HSL saturation than its sibling; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:32Z @kj the light `-active` variables in `:root` (and the schema default the dynamic style writes) sit below the base in luminance and above it in saturation; `.lm-mod-current.jp-colourful-tab-<id>` paints the current tab with them
+  - test-tags: E2E
+  - test: light theme: colour two tabs the same, select one, assert its background has lower luminance and higher saturation than the other's
+  - log: 2026-07-15T00:00:00Z @kj pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "light theme: colour two tabs the same, select one, assert its background is more saturated than the other's"
+  - log: 2026-10-17T13:01:32Z @kj amended text "selected coloured tab renders visibly brighter/more saturated than its inactive siblings in the light theme" -> "selected coloured tab renders visibly darker and more saturated than its inactive siblings in the light theme; the muted light palette since 1.1.21 (a user decision) puts the selected shade at CIELAB L* 72.5, C* 28 (lemon and mint C* 38) against the inactive L* 80, C* 18 - WCAG luminance 0.443-0.446 against 0.564-0.569"; reason: the old body said brighter; since 1.1.21 the muted light palette selects with a darker, more saturated shade, and the numbers are the measured palette
+  - log: 2026-10-17T13:01:32Z @kj edited test "light theme: colour two tabs the same, select one, assert its background is more saturated than the other's" -> "light theme: colour two tabs the same, select one, assert its background has lower luminance and higher saturation than the other's"; test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-17` **Text legibility** - HIGH; the tab label reaches WCAG AA text contrast (4.5:1 or more) on the `-active` shade and the inactive shade of all six colours in JupyterLab Light and JupyterLab Dark; measured with the theme's `--jp-ui-font-color1` label (alpha 0.87): light 8.39-10.29:1, dark 7.19-11.35:1
+  - evidence: Galata visual.spec.ts 'the label reaches WCAG AA contrast on every shade' (light, dark) passes: 24 shade/theme pairs, label background equals the shade, contrast >= 4.5:1, lowest 7.19:1 (dark lemon inactive); fails when the light rose -active is `#3a2328`; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:32Z @kj the extension recolours only backgrounds; the label keeps the theme's `--jp-ui-font-color1` (black or white at alpha 0.87), and the palette shades stay far enough from that text colour in luminance
+  - test-tags: E2E
+  - test: per colour and theme, colour two tabs, select one, blend the label's computed text colour over its computed background, assert WCAG contrast >= 4.5:1 on both tabs
+  - log: 2026-07-15T00:00:00Z @kj pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "per colour and theme, select a coloured tab, confirm in a screenshot that the label reads"
+  - log: 2026-10-17T13:01:32Z @kj amended text "tab label stays readable against the active shade in both themes" -> "the tab label reaches WCAG AA text contrast (4.5:1 or more) on the `-active` shade and the inactive shade of all six colours in JupyterLab Light and JupyterLab Dark; measured with the theme's `--jp-ui-font-color1` label (alpha 0.87): light 8.39-10.29:1, dark 7.19-11.35:1"
+  - log: 2026-10-17T13:01:32Z @kj edited test "per colour and theme, select a coloured tab, confirm in a screenshot that the label reads" -> "per colour and theme, colour two tabs, select one, blend the label's computed text colour over its computed background, assert WCAG contrast >= 4.5:1 on both tabs"; test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:53Z @kj edited evidence "Galata visual.spec.ts 'the label reaches WCAG AA contrast on every shade' (light, dark) passes: 24 shade/theme pairs, label background equals the shade, contrast >= 4.5:1, lowest 7.19:1 (dark lemon inactive); fails with a dark light-theme rose -active; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata visual.spec.ts 'the label reaches WCAG AA contrast on every shade' (light, dark) passes: 24 shade/theme pairs, label background equals the shade, contrast >= 4.5:1, lowest 7.19:1 (dark lemon inactive); fails when the light rose -active is `#3a2328`; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-ACTIVE-18` **Selection follows focus** - HIGH; switching the active tab moves the active shade to the newly-selected tab and restores the previous tab to its base shade
+  - evidence: Galata visual.spec.ts 'the -active shade follows the selection between same-coloured tabs' (light, dark) passes: after clicking B, B computes the -active hex and A the inactive hex, for all six colours; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:32Z @kj Lumino moves `lm-mod-current` to the newly selected tab and the CSS keyed on that class re-resolves; the extension runs no code on selection
+  - test-tags: E2E
+  - test: colour tabs A and B, select A then B, assert B has the `-active` shade and A the base shade
+  - log: 2026-07-15T00:00:00Z @kj pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "colour tabs A and B, select A then B, assert B has the `-active` shade and A the base shade"
+  - log: 2026-10-17T13:01:32Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-19` **Edge: active tab has no colour** - MEDIUM; selecting an uncoloured tab shows no active shade (no colour class present, rules do not match)
+  - evidence: Galata visual.spec.ts 'an uncoloured selected tab keeps the theme background' (light, dark) passes: the selected uncoloured tab has no colour class and computes `--jp-layout-color1`; fails with an unscoped `.lm-mod-current` rule; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:32Z @kj every active rule needs both `.lm-mod-current` and a `jp-colourful-tab-<id>` class, so an uncoloured current tab keeps JupyterLab's `--jp-layout-color1` fill
+  - test-tags: E2E
+  - test: select an uncoloured tab, assert no `jp-colourful-tab-*` class and the theme background
+  - log: 2026-07-15T00:00:00Z @kj implemented, pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "select an uncoloured tab, assert no `jp-colourful-tab-*` class and the theme background"
+  - log: 2026-10-17T13:01:32Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [x] `ACC-ACTIVE-20` **Edge: theme switch while active** - MEDIUM; toggling light/dark re-resolves the `-active` variable so the active tab follows the new theme
+  - evidence: Galata visual.spec.ts 'the selected tab follows a theme switch' passes: 6 switches without a reload, light->dark and dark->light; the current tab computes that theme's -active hex, the sibling its inactive hex; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:32Z @kj the variables are declared on `:root` (light) and `[data-jp-theme-light='false']`, the attribute the theme manager sets on body, so a theme switch re-resolves `var()` with no JavaScript listener
+  - test-tags: E2E
+  - test: select a coloured tab, switch light to dark, assert its background equals the dark `-active` value
+  - log: 2026-07-15T00:00:00Z @kj implemented, pending runtime verification
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "select a coloured tab, switch light to dark, assert its background equals the dark `-active` value"
+  - log: 2026-10-17T13:01:32Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj closed: verified on the source build
+- [-] `ACC-ACTIVE-21` **Edge: toolbar shade** - LOW; the active notebook's `jp-toolbar` keeps the base colour, not the `-active` shade, since only `.lm-mod-current` tabs match the active rule; confirm acceptable
+  - mechanism: 2026-10-17T13:01:33Z @kj before 1.1.7 only the base `.jp-colourful-tab-<id>::part(positioning-region)` rule painted the strip; since 1.1.7 the `jp-toolbar.jp-colourful-tab-<id>` rules paint it the `-active` shade, so the base-shade toolbar this item describes no longer occurs
+  - test-tags: E2E
+  - overridden-by: ACC-ACTIVE-9
+  - test: select a coloured notebook, assert its `jp-toolbar` background equals the base shade
+  - log: 2026-07-15T00:00:00Z @kj known behaviour, pending confirmation
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "LOW"
+  - log: 2026-10-17T10:31:05Z @kj edited test added "select a coloured notebook, assert its `jp-toolbar` background equals the base shade"
+  - log: 2026-10-17T13:01:33Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:02Z @kj rejected: superseded by ACC-ACTIVE-9: the base-shade toolbar this item asked to confirm is the regression DEF-TOOL-2 reported and fixed in 1.1.7; the strip now takes the -active shade, asserted by toolbar-strip.spec.ts 'menu colour follows the current tab across switches'
+- [x] `ACC-ACTIVE-32` **Strip clears with the tab colour** - MEDIUM; Clear in the tab's Tab Colour menu, or `setColour(widget, null)`, removes the `jp-colourful-tab-*` class from that widget's `jp-toolbar` within the 50 ms debounced refresh; the tab, the toolbar host and its `::part(positioning-region)` return to the backgrounds they had before the tab was coloured
+  - evidence: Galata toolbar-strip.spec.ts 'clearing the tab colour clears its strip' (light, dark) passes: after menu Green then Clear, and after setColour peach then null, the strip equals its snapshot from before colouring; fails without the toolbar clearing loop; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: colour a notebook by the menu, Clear it, assert the strip equals its uncoloured state; repeat with `setColour` and `setColour(widget, null)`
+  - test-tags: E2E
+  - mechanism: 2026-10-17T12:58:21Z @kj `applyToolbarColour` first strips every `jp-colourful-tab-*` class from every `jp-toolbar`, then recolours from the current tabs; a cleared tab class (menu `clearTabColour`, or `title.className` via the API) triggers it through the tab class mutation observer
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified on the source build
 
-## Tab Identity and Colour Persistence
+## Tab Identity and Colour Persistence `IDENT`
 
-A menu-set colour is stored in localStorage under a stable id resolved by `getStableTabId` (`src/index.ts`) and restored on refresh. The id must identify the ACTUAL thing in the tab, never a recyclable slot: JupyterLab widget ids (`launcher-0`) are a per-session counter, and terminado hands a new terminal the lowest free name (`_next_available_name` counts from 1), so both recycle and let a fresh tab inherit a dead tab's colour (DEF-6).
+A menu-set colour is stored in localStorage under a stable id resolved by `getStableTabId` (`src/index.ts`) and restored on refresh. The id must identify the ACTUAL thing in the tab, never a recyclable slot: JupyterLab widget ids (`launcher-0`) are a per-session counter, and terminado hands a new terminal the lowest free name (`_next_available_name` counts from 1), so both recycle and let a fresh tab inherit a dead tab's colour (DEF-COLOUR-6). A file is keyed on its path; a terminal entry `terminal:<name>` also stores the pty fingerprint the `FPRINT` route reports, so a recycled name is told apart from the terminal the colour was set on.
 
-- [ ] **Fresh tab is clear** - a completely new tab (launcher, plain shell, any widget) opens with NO colour, whatever colours were set on earlier tabs; a colour appears only when the user sets it on THAT tab or an extension tints it via the API (DEF-6)
-  - log: 2026-07-17 criterion added on user report - new launcher and new non-Claude terminal both acquired peach
-  - log: 2026-07-17 fixed - both recycling paths closed (no widget-id storage, dead terminals pruned); runtime confirmation pending
-- [ ] **File identity is the path** - a file/notebook tab resolves to its path (scraped from the tab `title` attribute, `Path: ...`), so its colour survives refresh and follows the file across close/reopen
-  - log: 2026-07-17 pre-existing behaviour, verify unchanged by the fix
-  - log: 2026-07-17 unit-tested in `identity.spec.ts` - path resolution kept, and the prune provably never touches a path key
-- [ ] **Terminal identity is the live session** - a terminal's colour is keyed on its session name (`terminal:<n>`) AND only survives while the server still lists that terminal; once the session is gone the stored colour is dropped, so the recycled name starts clear
-  - log: 2026-07-17 criterion added, in progress
-  - log: 2026-07-17 fixed - `pruneDeadTerminalColours` on `terminals.runningChanged`; mutation-tested (disabling the prune fails 4 tests); runtime confirmation pending
-- [ ] **No colour under a recyclable slot** - a widget with no stable identity (no file path, no terminal session - launcher, settings, etc.) never writes a colour to localStorage; its raw widget id is a per-session counter and must not be a storage key
-  - log: 2026-07-17 criterion added, in progress
-  - log: 2026-07-17 fixed - `stableTabId` returns null for those tabs; mutation-tested (re-adding the widget-id identity fails 2 tests); the tab is still coloured in-session, only persistence is refused
-- [ ] **Refresh persistence intact** - a file tab and a still-running terminal both keep their colours across a browser refresh, and across a JupyterHub control-panel round trip (the 1.1.3 regression - cleanup must not run before identifiers resolve)
-  - log: 2026-07-17 criterion added - guard against re-introducing the 1.1.3 defect
-- [ ] **Edge: terminal closed then name recycled** - colouring `terminal:3`, closing that terminal, then opening a new one that receives name `3` leaves the new terminal clear
-  - log: 2026-07-17 criterion added - the reported defect, reproduced from terminado's allocator
-  - log: 2026-07-17 holds only for a WITNESSED death - see the unwitnessed-gap limitation below
-- [ ] **Known limitation: unwitnessed death then recycle** - if terminal 3 dies AND its name is reused entirely while the JupyterLab page is closed, the new terminal 3 inherits the old colour; the prune only fires on deaths observed via `terminals.runningChanged`, and at reload the new terminal is indistinguishable from the old one - the frontend's whole terminal model is `{name: string}`, with no uuid and no creation time, so nothing can tell them apart; JupyterLab itself has the same conflation (its restorer keys terminals on `session.name`) and reconnects a restored tab to whatever session now holds the name; closing this needs a server extension (the only observer that outlives the terminals) - deliberately not built, see DEF-6 notes
-  - log: 2026-07-17 found while designing a stabler id at user's prompt; accepted for now, architecture decision pending
-- [ ] **Edge: tab closed, session alive** - closing a terminal's TAB while the server session keeps running retains the colour; reopening that terminal restores it (tab close is not session death)
-  - log: 2026-07-17 criterion added, pending runtime verification
-- [ ] **Edge: uncoloured tab left alone** - a tab whose stable id has no stored entry is never painted by the restore path
-  - log: 2026-07-17 criterion added, pending runtime verification
-- [ ] **Edge: file renamed / deleted** - a renamed file's tab loses its colour (path is the identity, known and accepted); recreating a file at a previously coloured path restores that colour
-  - log: 2026-07-17 known behaviour, confirm acceptable
+- [x] `ACC-IDENT-22` **Fresh tab is clear** - HIGH; a completely new tab (launcher, plain shell, any widget) opens with NO colour, whatever colours were set on earlier tabs; a colour appears only when the user sets it on THAT tab or an extension tints it via the API (DEF-COLOUR-6)
+  - evidence: Galata identity.spec.ts 'a launcher colour is never stored, so the next launcher-0 opens clear' and 'a terminal shut down on the server drops its colour, and the next terminal to take its name opens clear' pass: the new launcher-0 and the recycled terminal show no colour class; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-COLOUR-6 - the defect this criterion guards
+  - mechanism: 2026-10-17T13:01:33Z @kj only file paths and terminal session names are persisted (`stableTabId` returns null for a launcher), and a terminal entry is dropped once the server's fingerprint for that name changes or disappears, so a new launcher or a terminal given a recycled name has no stored entry to repaint
+  - test-tags: UNIT, E2E
+  - test: colour several tabs, open a new launcher and a new terminal, assert neither has a `jp-colourful-tab-*` class
+  - log: 2026-07-17T00:00:00Z @kj criterion added on user report - new launcher and new non-Claude terminal both acquired peach
+  - log: 2026-07-17T00:00:00Z @kj fixed - both recycling paths closed (no widget-id storage, dead terminals pruned); runtime confirmation pending
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour several tabs, open a new launcher and a new terminal, assert neither has a `jp-colourful-tab-*` class"
+  - log: 2026-10-17T13:01:33Z @kj amended text "a completely new tab (launcher, plain shell, any widget) opens with NO colour, whatever colours were set on earlier tabs; a colour appears only when the user sets it on THAT tab or an extension tints it via the API (DEF-6)" -> "a completely new tab (launcher, plain shell, any widget) opens with NO colour, whatever colours were set on earlier tabs; a colour appears only when the user sets it on THAT tab or an extension tints it via the API (DEF-COLOUR-6)"
+  - log: 2026-10-17T13:01:33Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:03Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-IDENT-23` **File identity is the path** - HIGH; a file/notebook tab resolves to its path (scraped from the tab `title` attribute, `Path: ...`), so its colour survives refresh and follows the file across close/reopen
+  - evidence: jest 'a restored file tab' 'shows its stored colour once its path arrives in the title' passes; Galata identity.spec.ts 'a file colour follows the path across close and reopen' and 'a background notebook keeps its colour across a reload and a navigation away and back' pass; both fail with attributeFilter ['class']; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:33Z @kj `stableTabId` reads the `Path:` line of the tab `title` attribute and the colour is stored under that path; the dock-panel MutationObserver watches `class` and `title` on tabs, so the late `Path:` title of a restored background tab triggers the debounced repaint
+  - test-tags: UNIT, E2E
+  - test: colour a notebook, reload, then close and reopen it, assert the colour each time
+  - log: 2026-07-17T00:00:00Z @kj pre-existing behaviour, verify unchanged by the fix
+  - log: 2026-07-17T00:00:00Z @kj unit-tested in `identity.spec.ts` - path resolution kept, and the prune provably never touches a path key
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour a notebook, reload, then close and reopen it, assert the colour each time"
+  - log: 2026-10-17T13:01:33Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:03Z @kj closed: fixed: the dock-panel MutationObserver watches `title` as well as `class`, and `affectsTabs` accepts a `title` change on an `lm-TabBar-tab`; a restored background file tab is repainted once its `Path:` title arrives; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-IDENT-24` **Terminal identity is the live session** - HIGH; a terminal's colour is keyed on its session name (`terminal:<n>`) AND only survives while the server still lists that terminal; once the session is gone the stored colour is dropped, so the recycled name starts clear
+  - evidence: Galata identity.spec.ts 'a terminal shut down on the server drops its colour, and the next terminal to take its name opens clear' passes: stored `{colour: 1, fp}` removed after the shutdown; jest 'falls back to the running list when the route does not answer' and 're-reads the fingerprints, so a name recycled later still loses its colour' pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:33Z @kj a terminal colour is stored as `terminal:<name>` with the pty fingerprint; at activation and on every `terminals.runningChanged`, `staleTerminalIds` drops entries whose name the server no longer reports or whose fingerprint changed (running-list rule when the route does not answer), and the prune clears the class it painted
+  - test-tags: UNIT, E2E
+  - test: colour `terminal:<n>`, shut the session down on the server, assert its localStorage entry is removed
+  - log: 2026-07-17T00:00:00Z @kj criterion added, in progress
+  - log: 2026-07-17T00:00:00Z @kj fixed - `pruneDeadTerminalColours` on `terminals.runningChanged`; mutation-tested (disabling the prune fails 4 tests); runtime confirmation pending
+  - log: 2026-10-17T10:30:48Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour `terminal:<n>`, shut the session down on the server, assert its localStorage entry is removed"
+  - log: 2026-10-17T13:01:33Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata identity.spec.ts 'a terminal shut down on the server drops its colour, and the next terminal to take its name opens clear' passes: stored `{colour: 1, fp}` removed after the shutdown; jest 'falls back to the running list when the route does not answer' and 're-reads the fingerprints, so a name recycled later still loses its colour' pass; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata identity.spec.ts 'a terminal shut down on the server drops its colour, and the next terminal to take its name opens clear' passes: stored `{colour: 1, fp}` removed after the shutdown; jest 'falls back to the running list when the route does not answer' and 're-reads the fingerprints, so a name recycled later still loses its colour' pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-IDENT-25` **No colour under a recyclable slot** - HIGH; a widget with no stable identity (no file path, no terminal session - launcher, settings, etc.) never writes a colour to localStorage; its raw widget id is a per-session counter and must not be a storage key
+  - evidence: Galata identity.spec.ts 'a launcher colour is never stored, so the next launcher-0 opens clear' passes: after colouring launcher-0 the store holds only the anchor path; fails when the widget id is the fallback key; Galata identity.spec.ts 'a launcher colour lasts while the current tab changes, and so does its clear' passes; jest identity.spec.ts 'returns null for a launcher' passes; jest 111/111, Galata 44/44 on `remoteEntry.c04a24b35134dcb7.js` (`logs/galata-9413.log`)
+  - mechanism: 2026-10-17T13:44:15Z @kj `stableTabId` returns null for a tab with neither a `Path:` title nor a terminal session, and the colour commands persist only when the stable id is non-null, so the pick is held on the widget's Lumino title for the widget's lifetime and is never written to localStorage
+  - mechanism: 2026-10-17T13:01:33Z @kj `stableTabId` returns null for a tab with neither a `Path:` title nor a terminal session, and the colour commands persist only when the stable id is non-null, so the tab is painted in the DOM for the session and nothing is written to localStorage
+  - test-tags: UNIT, E2E
+  - test: colour a launcher tab, assert no localStorage key is written for it
+  - log: 2026-07-17T00:00:00Z @kj criterion added, in progress
+  - log: 2026-07-17T00:00:00Z @kj fixed - `stableTabId` returns null for those tabs; mutation-tested (re-adding the widget-id identity fails 2 tests); the tab is still coloured in-session, only persistence is refused
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "HIGH"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour a launcher tab, assert no localStorage key is written for it"
+  - log: 2026-10-17T13:01:33Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata identity.spec.ts 'a launcher colour is never stored, so the next launcher-0 opens clear' passes: after colouring launcher-0 the store holds only the anchor path; fails when the widget id is the fallback key; jest identity.spec.ts 'returns null for a launcher' passes; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata identity.spec.ts 'a launcher colour is never stored, so the next launcher-0 opens clear' passes: after colouring launcher-0 the store holds only the anchor path; fails when the widget id is the fallback key; jest identity.spec.ts 'returns null for a launcher' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+  - log: 2026-10-17T13:44:15Z @kj mechanism overridden; reason: DEF-IDENT-11: a colour painted only in the DOM was lost on the first change of the current tab
+  - log: 2026-10-17T13:44:15Z @kj edited evidence "Galata identity.spec.ts 'a launcher colour is never stored, so the next launcher-0 opens clear' passes: after colouring launcher-0 the store holds only the anchor path; fails when the widget id is the fallback key; jest identity.spec.ts 'returns null for a launcher' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata identity.spec.ts 'a launcher colour is never stored, so the next launcher-0 opens clear' passes: after colouring launcher-0 the store holds only the anchor path; fails when the widget id is the fallback key; Galata identity.spec.ts 'a launcher colour lasts while the current tab changes, and so does its clear' passes; jest identity.spec.ts 'returns null for a launcher' passes; jest 111/111, Galata 44/44 on `remoteEntry.c04a24b35134dcb7.js` (`logs/galata-9413.log`)"; reason: names both Galata tests and the gate counts the close rule requires
+- [x] `ACC-IDENT-26` **Refresh persistence intact** - CRITICAL; a file tab and a still-running terminal both keep their colours across a browser refresh, and across a JupyterHub control-panel round trip (the 1.1.3 regression - cleanup must not run before identifiers resolve)
+  - evidence: Galata identity.spec.ts 'a running terminal keeps its colour across a reload and a navigation away and back' and 'a background notebook keeps its colour across a reload and a navigation away and back' pass; they fail under the always-running-list prune and attributeFilter ['class']; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:33Z @kj stored entries are never deleted on load (the activation prune runs only with fingerprints, which keep a live terminal's entry); `refreshAllTabColours` repaints restored tabs at `app.restored` and on later tab `class`, `title` and childList mutations
+  - test-tags: UNIT, E2E
+  - test: colour a file tab and a running terminal, reload, then do a JupyterHub control-panel round trip, assert both colours
+  - log: 2026-07-17T00:00:00Z @kj criterion added - guard against re-introducing the 1.1.3 defect
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "CRITICAL"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour a file tab and a running terminal, reload, then do a JupyterHub control-panel round trip, assert both colours"
+  - log: 2026-10-17T13:01:33Z @kj edited test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified: file half fixed with ACC-IDENT-23; the navigation away and back emulates the browser half of the JupyterHub control-panel round trip
+- [x] `ACC-IDENT-27` **Edge: terminal closed then name recycled** - MEDIUM; colouring `terminal:3`, closing that terminal, then opening a new one that receives name `3` leaves the new terminal clear
+  - evidence: Galata terminals.spec.ts 'terminal name recycled', first test, passes: terminal 1 coloured Green and shut down from the page, the next terminal named 1 has no colour class and no `terminal:1` key; fails with the prune disabled; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:34Z @kj on `terminals.runningChanged` the frontend re-reads `GET colourful-tab/terminals` and `staleTerminalIds` drops `terminal:<n>` whose fingerprint is absent or changed; `pruneStaleTerminalColours` also strips the class that entry painted, so the recycled name opens clear
+  - test-tags: UNIT, E2E
+  - test: colour `terminal:<n>`, shut it down from the page, open a new terminal, assert it is named `<n>` and its tab has no colour class
+  - log: 2026-07-17T00:00:00Z @kj criterion added - the reported defect, reproduced from terminado's allocator
+  - log: 2026-07-17T00:00:00Z @kj holds only for a WITNESSED death - see the unwitnessed-gap limitation below
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour `terminal:3`, shut it down, open a new terminal named `3`, assert no colour class"
+  - log: 2026-10-17T13:01:34Z @kj edited test "colour `terminal:3`, shut it down, open a new terminal named `3`, assert no colour class" -> "colour `terminal:<n>`, shut it down from the page, open a new terminal, assert it is named `<n>` and its tab has no colour class"; test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build; the witnessed-death limit noted in 2026-07 no longer applies since the 1.1.20 fingerprint prune
+- [-] `ACC-IDENT-28` **Known limitation: unwitnessed death then recycle** - LOW; if terminal 3 dies AND its name is reused entirely while the JupyterLab page is closed, the new terminal 3 inherits the old colour; the prune only fires on deaths observed via `terminals.runningChanged`, and at reload the new terminal is indistinguishable from the old one - the frontend's whole terminal model is `{name: string}`, with no uuid and no creation time, so nothing can tell them apart; JupyterLab itself has the same conflation (its restorer keys terminals on `session.name`) and reconnects a restored tab to whatever session now holds the name; closing this needs a server extension (the only observer that outlives the terminals) - deliberately not built, see DEF-6 notes
+  - overridden-by: ACC-IDENT-44
+  - mechanism: 2026-10-17T13:01:34Z @kj before 1.1.20 the prune saw only deaths the page witnessed through the running list, and a recycled name is running, so its entry survived; 1.1.20 compares each entry's stored pty fingerprint with `GET colourful-tab/terminals` and drops a mismatch at activation
+  - test-tags: E2E
+  - test: colour `terminal:3`, close the page, replace terminal 3 on the server, reload; expect the new terminal 3 to show the old colour
+  - log: 2026-07-17T00:00:00Z @kj found while designing a stabler id at user's prompt; accepted for now, architecture decision pending
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "LOW"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour `terminal:3`, close the page, replace terminal 3 on the server, reload; expect the new terminal 3 to show the old colour"
+  - log: 2026-10-17T13:01:34Z @kj edited test-tags added "E2E"
+  - log: 2026-10-17T13:02:04Z @kj rejected: superseded by ACC-IDENT-44: the fingerprint server extension shipped in 1.1.20; Galata 'a terminal recycled while no page was open opens clear' reproduces this item's test and observes no colour and no `terminal:1` key; the limitation remains only on a server without the route (ACC-IDENT-43); reason: names the overriding item, the release that removed the limitation and the test that shows it
+- [x] `ACC-IDENT-29` **Edge: tab closed, session alive** - MEDIUM; closing a terminal's TAB while the server session keeps running retains the colour; reopening that terminal restores it (tab close is not session death)
+  - evidence: Galata terminals.spec.ts 'closing a terminal tab keeps the colour of its running session' passes: tab closed, the session still listed, `terminal:<n>` kept, `terminal:open` reopens it sky; fails when the refresh deletes entries without a tab; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:34Z @kj closing a tab changes neither the server's running list nor the pty fingerprint, so no prune drops `terminal:<n>`; `refreshAllTabColours` repaints the entry onto the reopened tab, which resolves to the same `terminal:<n>` through the terminal tracker
+  - test-tags: E2E
+  - test: colour a terminal, close its tab with the session running, assert the localStorage entry stays, reopen it with `terminal:open`, assert the colour
+  - log: 2026-07-17T00:00:00Z @kj criterion added, pending runtime verification
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour a terminal, close its tab with the session running, reopen it, assert the colour"
+  - log: 2026-10-17T13:01:34Z @kj edited test "colour a terminal, close its tab with the session running, reopen it, assert the colour" -> "colour a terminal, close its tab with the session running, assert the localStorage entry stays, reopen it with `terminal:open`, assert the colour"; test-tags added "E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+- [x] `ACC-IDENT-30` **Edge: uncoloured tab left alone** - MEDIUM; a tab whose stable id has no stored entry is never painted by the restore path
+  - evidence: Galata terminals.spec.ts 'a reload paints only the tab that has a stored colour' passes: only the Red file carries a colour class after reload; the other file, the terminal and the Launcher carry none; fails when every identified tab is painted; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T14:56:11Z @kj `refreshAllTabColours` iterates the stored entries and paints every tab whose stable id equals an entry key and that carries no colour class; a tab with no entry is never visited
+  - test-tags: E2E
+  - test: open two files and a terminal, colour one file, reload, assert only that tab has a colour class
+  - log: 2026-07-17T00:00:00Z @kj criterion added, pending runtime verification
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "MEDIUM"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "with no stored colours, reload with 3 open tabs, assert none has a colour class"
+  - log: 2026-10-17T13:01:34Z @kj edited test "with no stored colours, reload with 3 open tabs, assert none has a colour class" -> "open two files and a terminal, colour one file, reload, assert only that tab has a colour class"; test-tags added "E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+  - log: 2026-10-17T14:56:11Z @kj mechanism updated "2026-10-17T13:01:34Z @kj `refreshAllTabColours` iterates the stored entries and paints only the tab whose stable id equals an entry key and that carries no colour class; a tab with no entry is never visited" -> "`refreshAllTabColours` iterates the stored entries and paints every tab whose stable id equals an entry key and that carries no colour class; a tab with no entry is never visited"
+- [x] `ACC-IDENT-31` **Edge: file renamed / deleted** - LOW; a renamed file's tab carries no colour after the next reload (the path is the identity, known and accepted); recreating a file at the previously coloured path restores that colour
+  - evidence: Galata terminals.spec.ts 'a renamed file loses its colour and the old path keeps it' passes: after rename and reload the tab has no colour class, the store is exactly {<tmp>/before.txt: 5}, a file recreated at before.txt opens lavender; jest identity.spec.ts 'never returns a file path' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - mechanism: 2026-10-17T13:01:34Z @kj a file's stable id is the `Path:` line of its tab title; a rename changes the id and nothing re-keys the entry; `staleTerminalIds` skips non-`terminal:` ids, so the entry waits under the old path
+  - test-tags: UNIT, E2E
+  - test: colour a file, rename it, reload, assert no colour and the entry still under the old path; recreate the old path, assert the colour returns
+  - log: 2026-07-17T00:00:00Z @kj known behaviour, confirm acceptable
+  - log: 2026-10-17T10:30:49Z @kj edited importance added "LOW"
+  - log: 2026-10-17T10:31:06Z @kj edited test added "colour a file, rename it, assert no colour; recreate the old path, assert the colour returns"
+  - log: 2026-10-17T13:01:34Z @kj amended text "a renamed file's tab loses its colour (path is the identity, known and accepted); recreating a file at a previously coloured path restores that colour" -> "a renamed file's tab carries no colour after the next reload (the path is the identity, known and accepted); recreating a file at the previously coloured path restores that colour"
+  - log: 2026-10-17T13:01:34Z @kj edited test "colour a file, rename it, assert no colour; recreate the old path, assert the colour returns" -> "colour a file, rename it, reload, assert no colour and the entry still under the old path; recreate the old path, assert the colour returns"; test-tags added "UNIT, E2E"
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata terminals.spec.ts 'a renamed file loses its colour and the old path keeps it' passes: after rename and reload the tab has no colour class, the store is exactly {<tmp>/before.txt: 5}, a file recreated at before.txt opens lavender; jest identity.spec.ts 'never returns a file path' passes; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata terminals.spec.ts 'a renamed file loses its colour and the old path keeps it' passes: after rename and reload the tab has no colour class, the store is exactly {<tmp>/before.txt: 5}, a file recreated at before.txt opens lavender; jest identity.spec.ts 'never returns a file path' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-IDENT-43` **Fallback without the route** - HIGH; when GET `colourful-tab/terminals` fails (non-2xx such as 404, network error, non-JSON body, body without `terminals`), terminal colours follow the running list: kept while `GET /api/terminals` lists the name, dropped once it does not, never pruned at activation
+  - evidence: Galata terminals.spec.ts 'without the fingerprint route terminal colours follow the running list' passes (route 404: colour kept across reload, dropped after shutdown; fails when a non-OK answer returns {}); jest fingerprints.spec.ts null-answer tests and 'falls back to the running list when the route does not answer' pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: make the route answer 404, colour a terminal, reload, assert the colour; shut the terminal down, assert the entry is removed
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj `fetchTerminalFingerprints` answers null for every failure; with null, `staleTerminalIds` drops only names absent from the `runningChanged` list, and the activation prune is skipped because the running list is not fetched yet
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata terminals.spec.ts 'without the fingerprint route terminal colours follow the running list' passes (route 404: colour kept across reload, dropped after shutdown; fails when a non-OK answer returns {}); jest fingerprints.spec.ts null-answer tests and 'falls back to the running list when the route does not answer' pass; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata terminals.spec.ts 'without the fingerprint route terminal colours follow the running list' passes (route 404: colour kept across reload, dropped after shutdown; fails when a non-OK answer returns {}); jest fingerprints.spec.ts null-answer tests and 'falls back to the running list when the route does not answer' pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-IDENT-44` **Edge: terminal recycled while no page is open** - MEDIUM; with the fingerprint route answering, a terminal that dies and whose name is reused while no JupyterLab page is open starts clear on the next page load
+  - evidence: Galata terminals.spec.ts 'a terminal recycled while no page was open opens clear' passes (terminal deleted and recreated under the same name via REST while the page was away; no colour class, no stored key); fails under the name-only prune; jest 'drops the colour of a terminal whose name was handed to a new pty' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - overrides: ACC-IDENT-28
+  - test: colour `terminal:<n>`, leave the page, delete and recreate terminal `<n>` via the REST API, return, assert no colour class and no stored entry
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj a terminal entry stores `{colour, fp}`; at activation the prune compares `fp` with the route's answer, drops a mismatch and strips the class it painted
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata terminals.spec.ts 'a terminal recycled while no page was open opens clear' passes (terminal deleted and recreated under the same name via REST while the page was away; no colour class, no stored key); fails under the name-only prune; jest 'drops the colour of a terminal whose name was handed to a new pty' passes; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata terminals.spec.ts 'a terminal recycled while no page was open opens clear' passes (terminal deleted and recreated under the same name via REST while the page was away; no colour class, no stored key); fails under the name-only prune; jest 'drops the colour of a terminal whose name was handed to a new pty' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+
+## Extension API `API`
+
+The public `IColourfulTabs` token other extensions consume: `setColour` tints a tab through its widget title, `claim` marks a tab whose colour another extension persists, `colourChanged` announces the user's menu choices; `src/tokens.ts`, `src/index.ts`
+
+- [x] `ACC-API-33` **setColour tints through the widget title** - HIGH; `IColourfulTabs.setColour(widget, colourId)` leaves exactly one `jp-colourful-tab-<id>` token on `widget.title.className` for `rose`, `peach`, `lemon`, `mint`, `sky`, `lavender`, so the dock tab carries that class through every re-render; `null` or an unknown id removes the token; a disposed widget is left untouched
+  - evidence: jest set-colour.spec.ts 'maps every colour id to its CSS class', 'clears the class when colourId is null', 'clears the class for an unknown colour id', 'leaves the className untouched on a disposed widget' pass; Galata toolbar-strip.spec.ts 'API colour reaches the strip, terminal included' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: set each of the six ids, assert the title token; set `null` and `not-a-colour`, assert no token; tint a notebook and a terminal through the running plugin, assert the tab's class and `-active` background
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:21Z @kj `setWidgetTabColour` replaces the one `jp-colourful-tab-*` token on `widget.title.className`; on every render Lumino `TabBar.Renderer.createTabClass` copies `title.className` onto the tab
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-API-34` **claim returns a counted IDisposable** - HIGH; `claim(widget)` returns an `IDisposable`; claims are counted per widget id, so a tab claimed twice stays claimed until both are disposed; disposing one holder twice releases one claim; after the last dispose a menu pick is stored again
+  - evidence: jest jupyterlab_colourful_tab_extension.spec.ts 'stays owned until every holder has released', 'disposing one holder twice releases one claim' and 'restores persistence when the claim is disposed' pass; jest 111/111
+  - test: claim a terminal tab twice, dispose the first twice, pick Green, assert nothing stored; dispose the second, pick Green, assert `terminal:3` stored
+  - test-tags: UNIT
+  - mechanism: 2026-10-17T12:58:21Z @kj `tabClaims` maps a widget id to a count; `claim` increments it and returns a `DisposableDelegate` whose callback decrements the count or deletes the id, and `DisposableDelegate` runs its callback at most once
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+- [x] `ACC-API-35` **colourChanged carries the menu choice** - HIGH; `colourChanged` emits `{ widgetId, colourId }` once per context-menu pick, `colourId` being the colour id string (`mint`), never the palette index, and `{ widgetId, colourId: null }` once per Clear, on claimed and unclaimed tabs alike; `claim` and `setColour` emit nothing
+  - evidence: jest 'carries the colour id and the widget id on a pick', 'carries a null colour id on a clear', 'paints and emits a pick on a claimed tab, but persists nothing', 'announces nothing of its own - a claim is not a choice', api.spec.ts 'announces nothing when a consumer sets or clears a colour' pass; jest 111/111
+  - test: connect to the signal, pick Green then Clear on a tab, assert `[{terminal-1, mint}, {terminal-1, null}]`; call `claim` and `setColour`, assert no emission
+  - test-tags: UNIT
+  - mechanism: 2026-10-17T12:58:21Z @kj the six colour commands and `colourful-tab:clear` call `emitChoice(widgetId, colour.id or null)` on a Lumino `Signal` whose sender is the API; `setColour` and `claim` never emit
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-API-36` **Claimed tab never persisted** - HIGH; a context-menu pick or Clear on a claimed tab paints or clears the tab and writes nothing to localStorage key `jupyterlab-colourful-tab-colours`; an entry already stored under the tab's stable id is left in place for the file's other views, and the acted view is not repainted from it again for the session
+  - evidence: jest 'paints and emits a pick on a claimed tab, but persists nothing', 'keeps the entry a pick on a claimed tab replaces', 'keeps the entry a clear on a claimed tab replaces', 'keeps a shared entry when a pick on a claimed view replaces it' and 'keeps a shared entry when a Clear on a claimed view replaces it' pass; jest 131/131, Galata 44/44 on remoteEntry.7aa4d56e39b646a5.js (logs/galata-59533.log)
+  - test: store `terminal:3`, claim its tab, pick Green, assert the tab shows mint and the store is `{}`; repeat with Clear
+  - test-tags: UNIT
+  - mechanism: 2026-10-17T16:28:53Z @kj the colour command writes `tabColours` only when the stable id is set and the tab is not claimed; a claimed pick or Clear writes nothing at all and adds the acted widget id to the session-scoped `suppressedClaimedViews`, whose members `refreshAllTabColours` skips alongside unverified claimed entries
+  - mechanism: 2026-10-17T16:06:48Z @kj the colour command writes `tabColours` only when the stable id is set and the tab is not claimed; on a claimed tab it deletes the existing entry only when no unclaimed view of the same stable id relies on it, and `colourful-tab:clear` does the same
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+  - log: 2026-10-17T16:06:48Z @kj amended text "a context-menu pick or Clear on a claimed tab paints or clears the tab and writes nothing to localStorage key `jupyterlab-colourful-tab-colours`; an entry already stored under the tab's stable id is deleted, since the pick replaces the choice it recorded" -> "a context-menu pick or Clear on a claimed tab paints or clears the tab and writes nothing to localStorage key `jupyterlab-colourful-tab-colours`; an entry already stored under the tab's stable id is deleted only when no unclaimed view of the same stable id relies on it, since the action replaces the choice it recorded"; reason: the delete must be scoped to no unclaimed view of the same stable id, because the entry is the file colour an unclaimed sibling view relies on (DEF-IDENT-21)
+  - log: 2026-10-17T16:06:48Z @kj mechanism updated "2026-10-17T12:58:21Z @kj the colour command writes `tabColours` only when the stable id is set and the tab is not claimed; on a claimed tab it deletes the existing entry, and `colourful-tab:clear` deletes the entry whether or not the tab is claimed" -> "the colour command writes `tabColours` only when the stable id is set and the tab is not claimed; on a claimed tab it deletes the existing entry only when no unclaimed view of the same stable id relies on it, and `colourful-tab:clear` does the same"
+  - log: 2026-10-17T16:12:01Z @kj edited evidence "jest jupyterlab_colourful_tab_extension.spec.ts 'paints and emits a pick on a claimed tab, but persists nothing' (mint class, store {}), 'deletes the entry a pick on a claimed tab replaces' and 'deletes the entry a clear on a claimed tab replaces' pass; jest 111/111" -> "jest 'paints and emits a pick on a claimed tab, but persists nothing', 'deletes the entry a pick on a claimed tab replaces', 'deletes the entry a clear on a claimed tab replaces', 'keeps a shared entry when a pick on a claimed view replaces it' and 'keeps a shared entry when a Clear on a claimed view replaces it' pass; jest 131/131, Galata 44/44 on remoteEntry.df7d5fbae52053ae.js (logs/galata-48467.log)"; reason: names the added shared-entry tests and the current gate counts
+  - log: 2026-10-17T16:28:49Z @kj amended text "a context-menu pick or Clear on a claimed tab paints or clears the tab and writes nothing to localStorage key `jupyterlab-colourful-tab-colours`; an entry already stored under the tab's stable id is deleted only when no unclaimed view of the same stable id relies on it, since the action replaces the choice it recorded" -> "a context-menu pick or Clear on a claimed tab paints or clears the tab and writes nothing to localStorage key `jupyterlab-colourful-tab-colours`; an entry already stored under the tab's stable id is left in place for the file's other views, and the acted view is not repainted from it again for the session"; reason: the criterion must state the round-4 rule: a claimed action never writes and leaves the entry for other views
+  - log: 2026-10-17T16:34:15Z @kj edited evidence "jest 'paints and emits a pick on a claimed tab, but persists nothing', 'deletes the entry a pick on a claimed tab replaces', 'deletes the entry a clear on a claimed tab replaces', 'keeps a shared entry when a pick on a claimed view replaces it' and 'keeps a shared entry when a Clear on a claimed view replaces it' pass; jest 131/131, Galata 44/44 on remoteEntry.df7d5fbae52053ae.js (logs/galata-48467.log)" -> "jest 'paints and emits a pick on a claimed tab, but persists nothing', 'keeps the entry a pick on a claimed tab replaces', 'keeps the entry a clear on a claimed tab replaces', 'keeps a shared entry when a pick on a claimed view replaces it' and 'keeps a shared entry when a Clear on a claimed view replaces it' pass; jest 131/131, Galata 44/44 on remoteEntry.7aa4d56e39b646a5.js (logs/galata-59533.log)"; reason: the evidence must name the renamed claimed-tab tests and the current run
+- [x] `ACC-API-37` **Owner colour first on a claimed tab** - MEDIUM; on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class, and not a view the user has picked or cleared from the menu this session, unless a later unclaimed menu pick on that view rewrites the stored entry; a terminal-keyed entry paints only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name, and a path-keyed entry paints by its path identity, which carries no fingerprint
+  - evidence: jest 'paints an owner colour on a claimed tab and keeps the stored entry', 'leaves the owner's own colour on a claimed tab' and 'keeps a shared entry when a Clear on a claimed view replaces it' pass, the last asserting the acted claimed view carries neither mint nor rose after a flush; jest 131/131, Galata 44/44 on remoteEntry.7aa4d56e39b646a5.js (logs/galata-59533.log)
+  - test: menu-colour a terminal, claim it, `setColour` sky, update its title 10 times, assert sky only and the entry kept; clear the owner colour, assert the menu colour shows; with an unmatched `fp`, assert the tab stays blank
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T17:09:52Z @kj a later unclaimed menu pick on the acted view rewrites the stored entry and releases the session mark, so the newer stored colour paints after an API clear
+  - mechanism: 2026-10-17T16:55:06Z @kj refreshAllTabColours skips a marked widget id whether or not the tab is currently claimed; the fingerprint verification stays claimed-only
+  - mechanism: 2026-10-17T16:28:55Z @kj `refreshAllTabColours` skips any tab that has a colour class; on a claimed tab it also skips a widget id in `suppressedClaimedViews` and paints only when `isVerifiedEntry` holds (entry `fp` equals `terminalFingerprints[name]`, a path key answering true by identity); `setColour` skips `releaseMenuColour` on a claimed tab
+  - mechanism: 2026-10-17T12:58:21Z @kj `refreshAllTabColours` skips any tab that has a colour class; on a claimed tab it paints only when `isVerifiedEntry` holds (entry `fp` equals `terminalFingerprints[name]`); `setColour` skips `releaseMenuColour` on a claimed tab
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata api.spec.ts 'a claimed terminal keeps the owner's colour over its verified menu colour' passes; jest 'leaves the owner's own colour on a claimed tab', 'repaints a stored colour onto a claimed tab the owner has left blank', 'leaves a claimed tab blank when the stored entry is unverified', 'keeps the stored entry when the owner paints through setColour' pass; jest 111/111" -> "Galata api.spec.ts 'a claimed terminal keeps the owner's colour over its verified menu colour' passes; jest 'leaves the owner's own colour on a claimed tab', 'repaints a stored colour onto a claimed tab the owner has left blank', 'leaves a claimed tab blank when the stored entry is unverified', 'keeps the stored entry when the owner paints through setColour' pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T15:17:51Z @kj amended text "on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class, and only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name" -> "on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class; a terminal-keyed entry paints only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name, and a path-keyed entry paints by its path identity, which carries no fingerprint"; reason: the criterion must scope the fingerprint condition to terminal keys so a path-keyed entry can restore on a claimed tab
+  - log: 2026-10-17T15:22:54Z @kj edited evidence "Galata api.spec.ts 'a claimed terminal keeps the owner's colour over its verified menu colour' passes; jest 'leaves the owner's own colour on a claimed tab', 'repaints a stored colour onto a claimed tab the owner has left blank', 'leaves a claimed tab blank when the stored entry is unverified', 'keeps the stored entry when the owner paints through setColour' pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata api.spec.ts 'a claimed terminal keeps the owner's colour over its verified menu colour' passes; jest 'leaves the owner's own colour on a claimed tab', 'repaints a stored colour onto a claimed tab the owner has left blank', 'repaints a stored file colour onto a claimed file tab the owner has left blank', 'leaves a claimed tab blank when the stored entry is unverified', 'keeps the stored entry when the owner paints through setColour' pass; jest 122/122, Galata 44/44 on `remoteEntry.d561aa5ef54b8d7f.js` (`logs/galata-9437.log`)"; reason: names the added file-tab test and the current gate counts
+  - log: 2026-10-17T16:28:50Z @kj amended text "on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class; a terminal-keyed entry paints only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name, and a path-keyed entry paints by its path identity, which carries no fingerprint" -> "on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class, and not a view the user has picked or cleared from the menu this session; a terminal-keyed entry paints only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name, and a path-keyed entry paints by its path identity, which carries no fingerprint"; reason: the criterion must record that the owner-blank restore skips a view the user acted on this session
+  - log: 2026-10-17T16:34:17Z @kj edited evidence "Galata api.spec.ts 'a claimed terminal keeps the owner's colour over its verified menu colour' passes; jest 'leaves the owner's own colour on a claimed tab', 'repaints a stored colour onto a claimed tab the owner has left blank', 'repaints a stored file colour onto a claimed file tab the owner has left blank', 'leaves a claimed tab blank when the stored entry is unverified', 'keeps the stored entry when the owner paints through setColour' pass; jest 122/122, Galata 44/44 on `remoteEntry.d561aa5ef54b8d7f.js` (`logs/galata-9437.log`)" -> "jest 'paints an owner colour on a claimed tab and keeps the stored entry', 'leaves the owner's own colour on a claimed tab' and 'keeps a shared entry when a Clear on a claimed view replaces it' pass, the last asserting the acted claimed view carries neither mint nor rose after a flush; jest 131/131, Galata 44/44 on remoteEntry.7aa4d56e39b646a5.js (logs/galata-59533.log)"; reason: the evidence must record the suppression assertion on the acted claimed view and the current run
+  - log: 2026-10-17T17:09:59Z @kj amended text "on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class, and not a view the user has picked or cleared from the menu this session; a terminal-keyed entry paints only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name, and a path-keyed entry paints by its path identity, which carries no fingerprint" -> "on a claimed tab a stored entry never paints over a colour class the owner set through `setColour`, and `setColour` there keeps the stored entry; the entry paints only a tab with no colour class, and not a view the user has picked or cleared from the menu this session, unless a later unclaimed menu pick on that view rewrites the stored entry; a terminal-keyed entry paints only when its `fp` equals the fingerprint `GET colourful-tab/terminals` reports for its terminal name, and a path-keyed entry paints by its path identity, which carries no fingerprint"; reason: the criterion must state the mark release the round-6 change adds
+
+## Terminal Fingerprint Route `FPRINT`
+
+The server route that reports each running terminal's pty fingerprint, so the frontend can tell a recycled terminal name from the terminal a colour was set on; `jupyterlab_colourful_tab_extension/handlers.py`
+
+- `GET <base_url>colourful-tab/terminals` -> 200 `{"terminals": {"<name>": "<pid>:<starttime>"}}`; 403 without authentication; 503 `{"error": "terminal_service_unavailable"}` or `{"error": "terminal_registry_unavailable"}`
+
+- [x] `ACC-FPRINT-38` **Route answers every running terminal** - HIGH; GET `<base_url>colourful-tab/terminals` answers 200 `{"terminals": {"<name>": "<pid>:<starttime>"}}` with one entry per running terminal; `<starttime>` is field 22 of `/proc/<pid>/stat`, and the bare `<pid>` stands where `/proc` cannot answer
+  - evidence: pytest test_handlers.py::test_the_fingerprint_pairs_the_pid_with_its_start_time, ::test_a_command_name_with_spaces_does_not_shift_the_start_time_field, ::test_a_pid_proc_cannot_answer_for_degrades_to_the_bare_pid pass; Galata terminal-fingerprints.spec.ts 'a running terminal reports a fingerprint' and 'a closed terminal leaves no fingerprint behind' pass; pytest 12/12, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: create a terminal, GET `colourful-tab/terminals`, assert its name maps to `<pid>:<starttime>` matching `/proc/<pid>/stat`
+  - test-tags: INTEGRATION, E2E
+  - mechanism: 2026-10-17T12:58:21Z @kj `TerminalFingerprintsHandler.get` walks `terminal_manager.terminals` and reports `ptyproc.pid` paired with the start time read from the stat line split after its last `)`
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+- [x] `ACC-FPRINT-39` **Route requires authentication** - HIGH; an anonymous GET `colourful-tab/terminals` answers 403 and no terminal list, also with `ServerApp.allow_unauthenticated_access=True`
+  - evidence: pytest test_terminals.py::test_an_anonymous_request_is_refused (empty Authorization header, `allow_unauthenticated_access=True`, 403) and ::test_an_authenticated_request_is_answered (token, 200, terminals dict) pass; the first fails with `@tornado.web.authenticated` removed; pytest 12/12
+  - test: GET the route with an empty Authorization header on a server allowing anonymous access, assert 403; with the token, assert 200
+  - test-tags: INTEGRATION
+  - mechanism: 2026-10-17T12:58:21Z @kj `@tornado.web.authenticated` on `TerminalFingerprintsHandler.get`; `APIHandler.get_login_url` turns the login redirect into 403; CI `.github/scripts/check_auth.py` fails the build on an undecorated verb
+  - log: 2026-10-17T12:58:21Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+- [x] `ACC-FPRINT-40` **Edge: no terminal service** - MEDIUM; with no `terminal_manager` the route answers 503 `{"error": "terminal_service_unavailable"}`, and with a manager lacking a `terminals` registry 503 `{"error": "terminal_registry_unavailable"}`, never an empty map
+  - evidence: pytest test_handlers.py::test_no_terminal_manager_answers_503_rather_than_no_terminals and ::test_a_manager_without_a_registry_answers_503 pass; pytest 12/12
+  - test: remove `terminal_manager` from the server settings, GET the route, assert 503 `terminal_service_unavailable`; repeat with a manager without `terminals`, assert 503 `terminal_registry_unavailable`
+  - test-tags: INTEGRATION
+  - mechanism: 2026-10-17T12:58:22Z @kj the handler checks `settings['terminal_manager']` and its `terminals` attribute before reading and finishes with 503 instead of `{}`, because the frontend reads `{}` as no terminals and would drop every terminal colour
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+- [x] `ACC-FPRINT-41` **Edge: route never creates a terminal** - HIGH; a GET reads `terminal_manager.terminals` directly and never calls `get_terminal`, which is get-or-create and would leave `GET /api/terminals` answering 500 for every client
+  - evidence: pytest test_handlers.py::test_the_route_never_creates_a_terminal passes (manager whose `get_terminal` raises; route answers 200, registry unchanged); pytest 12/12
+  - test: install a manager whose `get_terminal` raises, GET the route, assert 200 and the registry unchanged
+  - test-tags: INTEGRATION
+  - mechanism: 2026-10-17T12:58:22Z @kj registry snapshot `list(registry.items())` instead of `get_terminal(name)`, so no terminal without `last_activity` is ever spawned
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+- [x] `ACC-FPRINT-42` **Edge: terminal without a pty** - MEDIUM; a registry entry whose `ptyproc` is gone is left out of the answer, and the other terminals are still answered with 200
+  - evidence: pytest test_handlers.py::test_a_terminal_without_a_pty_is_absent_rather_than_fatal passes (registry {1: live pty, 2: ptyproc None} answers 200 with only 1); pytest 12/12
+  - test: registry with one live pty and one without, GET the route, assert 200 and only the live name
+  - test-tags: INTEGRATION
+  - mechanism: 2026-10-17T12:58:22Z @kj the handler skips an entry whose `ptyproc.pid` is None instead of raising, so one closing terminal does not cost the others their fingerprints
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified
+- [x] `ACC-FPRINT-45` **Recycled name, new fingerprint** - HIGH; a terminal created under the name of a shut-down terminal reports a different fingerprint than its predecessor
+  - evidence: Galata terminal-fingerprints.spec.ts 'a recycled terminal name carries a different fingerprint' passes (name reused, fingerprint differs); Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: create a terminal, record its fingerprint, delete it, create another, assert the same name and a different fingerprint
+  - test-tags: E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj a new terminal is a new pty process; `<pid>:<starttime>` differs even when the operating system reuses the pid
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:03Z @kj closed: verified on the source build
+
+## Divider and Palette Settings `DIVIDE`
+
+The same-colour divider between adjacent inactive tabs and the settings that drive it - `dynamicDivider`, `dividerContrast` and the user-editable `palette` - emitted as one generated `<style id="jp-colourful-tab-dynamic-style">` from `src/dynamicStyle.ts`
+
+- [x] `ACC-DIVIDE-46` **Divider between inactive same-coloured tabs** - HIGH; with `dynamicDivider` true (the default), the seam between two adjacent INACTIVE tabs carrying the same `jp-colourful-tab-<id>` class takes one computed neutral grey on both sides (left tab `border-right-color`, right tab `border-left-color`); a pair where either tab is `.lm-mod-current` keeps the theme's own seam (DEF-DIVIDE-7)
+  - evidence: Galata divider-settings.spec.ts 'grey seam only between two inactive same-coloured tabs' (light, dark) passes: inactive pair seam one grey on both sides, >= 3:1 against the tab; either tab current gives the theme seam; fails without `:not(.lm-mod-current)`; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - related: DEF-DIVIDE-7 - the defect this criterion guards
+  - test: colour two adjacent notebooks rose, select a third, assert the seam is one grey >= 3:1 against the tab; select either rose tab, assert the seam equals the seam measured with `dynamicDivider` off
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj `dividerRules` in `src/dynamicStyle.ts` emits, per colour and theme, `.lm-TabBar-tab.jp-colourful-tab-<id>:not(.lm-mod-current)` rules for `:has(+ tab)` border-right and `tab + tab` border-left, `!important`, colour only
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+- [x] `ACC-DIVIDE-47` **Divider direction per theme** - MEDIUM; the divider grey is darker than the inactive shade in the light theme and brighter than it in the dark theme (`[data-jp-theme-light='false']`); it is the subtlest grey level meeting the target, clamping to `#000000` / `#ffffff` when no grey reaches it
+  - evidence: jest 'greys the seam darker than the tab in light theme, brighter in dark', 'clamps to the direction extreme when a user palette makes high unreachable' and contrast.spec.ts 'stays on the required side for palettes that contradict the theme' pass; Galata divider-settings.spec.ts 4/4 assert the grey on the theme side; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: build CSS from `DEFAULT_PALETTE`, per colour assert light grey luminance < inactive shade and dark grey luminance > inactive shade; in the browser compare computed seam and tab luminance in both themes
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj `dividerGrey` in `src/contrast.ts` scans grey levels from the theme side (255 -> 0 darker, 0 -> 255 brighter) and returns the first level on that side of every background that meets the WCAG ratio
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build; reason: names the tests and the gate counts the close rule requires
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "jest 'greys the seam darker than the tab in light theme, brighter in dark', 'clamps to the direction extreme when a user palette makes high unreachable' and contrast.spec.ts 'stays on the required side for palettes that contradict the theme' pass; Galata divider-settings.spec.ts 4/4 assert the grey on the theme side; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "jest 'greys the seam darker than the tab in light theme, brighter in dark', 'clamps to the direction extreme when a user palette makes high unreachable' and contrast.spec.ts 'stays on the required side for palettes that contradict the theme' pass; Galata divider-settings.spec.ts 4/4 assert the grey on the theme side; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"; reason: names the tests and the gate counts the close rule requires
+- [x] `ACC-DIVIDE-48` **dynamicDivider toggle applies live** - MEDIUM; setting `dynamicDivider` to false removes every divider rule and restores the theme seam without a page reload, keeping the 24 `--jp-colourful-tab-*` variables; setting it back to true restores the grey
+  - evidence: Galata divider-settings.spec.ts 'grey seam only between two inactive same-coloured tabs' (light, dark): `dynamicDivider` false set live gives the theme seam, true a grey >= 3:1; fails with `settings.changed` disconnected; jest 'omits divider rules when dynamicDivider is off, keeping the variables' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: inactive rose pair; set `dynamicDivider` false through the setting registry, assert the theme seam; set it true, assert a grey >= 3:1
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj `settings.changed` in `src/index.ts` re-runs `buildDynamicCss(mergePalette(palette), dynamicDivider !== false, asDividerContrast(dividerContrast))` and `applyDynamicStyle` rewrites the one injected `<style>`
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata divider-settings.spec.ts 'grey seam only between two inactive same-coloured tabs' (light, dark): `dynamicDivider` false set live gives the theme seam, true a grey >= 3:1; fails with `settings.changed` disconnected; jest 'omits divider rules when dynamicDivider is off, keeping the variables' passes; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata divider-settings.spec.ts 'grey seam only between two inactive same-coloured tabs' (light, dark): `dynamicDivider` false set live gives the theme seam, true a grey >= 3:1; fails with `settings.changed` disconnected; jest 'omits divider rules when dynamicDivider is off, keeping the variables' passes; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-DIVIDE-49` **Divider contrast ladder** - MEDIUM; `dividerContrast` `low` targets 2:1, `medium` 3:1 (default), `high` 4:1 against the inactive shade in both themes; each step gives a strictly stronger grey; any other value falls back to `medium`
+  - evidence: Galata divider-settings.spec.ts 'contrast and palette settings apply live' (light, dark): low, medium, high set live give seam contrast >= 2, >= 3, >= 4, strictly rising; fails with the contrast fixed to medium; jest 'divider contrast magnitudes' 6/6 pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: inactive rose pair; set each magnitude live, assert computed seam contrast >= 2 / >= 3 / >= 4 and strictly rising; `asDividerContrast('HIGH')` returns `medium`
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj `CONTRAST_TARGETS` in `src/dynamicStyle.ts` maps magnitude to ratio; `asDividerContrast` guards the raw value; the schema enum, default and description are pinned to `CONTRAST_TARGETS`
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata divider-settings.spec.ts 'contrast and palette settings apply live' (light, dark): low, medium, high set live give seam contrast >= 2, >= 3, >= 4, strictly rising; fails with the contrast fixed to medium; jest 'divider contrast magnitudes' 6/6 pass; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata divider-settings.spec.ts 'contrast and palette settings apply live' (light, dark): low, medium, high set live give seam contrast >= 2, >= 3, >= 4, strictly rising; fails with the contrast fixed to medium; jest 'divider contrast magnitudes' 6/6 pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-DIVIDE-50` **Palette editor applies live** - HIGH; an edit of `palette` (`inactive` and `active` `#rrggbb` per colour per theme) in the Settings Editor repaints the tabs and recomputes the divider grey against the new shade without a page reload; a partial edit keeps the default of every field it omits; a malformed field keeps its default
+  - evidence: Galata divider-settings.spec.ts 'contrast and palette settings apply live' (light, dark): after a live palette edit the rose tab renders the new hex and the seam is one grey >= 3:1 on it; fails when the grey uses `DEFAULT_PALETTE`; jest 'mergePalette' 4/4 pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: set `palette.light.rose.inactive` `#b4a0c8` (dark `#604050`) through the setting registry; assert the tab background is the new hex and the seam grey is >= 3:1 against it (the default shade's grey gives 2.2:1 / 2.3:1)
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj `mergePalette` merges the user value over `DEFAULT_PALETTE` field by field, accepting only 6-digit hex; `buildDynamicCss` redefines the 12 variables per theme and recomputes every grey with `dividerGrey`
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:04Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:52Z @kj edited evidence "Galata divider-settings.spec.ts 'contrast and palette settings apply live' (light, dark): after a live palette edit the rose tab renders the new hex and the seam is one grey >= 3:1 on it; fails when the grey uses `DEFAULT_PALETTE`; jest 'mergePalette' 4/4 pass; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "Galata divider-settings.spec.ts 'contrast and palette settings apply live' (light, dark): after a live palette edit the rose tab renders the new hex and the seam is one grey >= 3:1 on it; fails when the grey uses `DEFAULT_PALETTE`; jest 'mergePalette' 4/4 pass; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"
+- [x] `ACC-DIVIDE-51` **Invalid settings fall back to defaults** - MEDIUM; when `settingRegistry.load` rejects (for example one mistyped hex in a hand-edited settings file fails schema validation), the injected style holds the default palette with the divider on at `medium`, and a console warning is logged
+  - evidence: jest settings-fallback.spec.ts 'applies default palette and divider when settingRegistry.load rejects' passes: console.warn called, injected style equals `buildDynamicCss(mergePalette(undefined), true)` and contains `border-right-color`; jest 111/111
+  - test: activate the plugin with a registry whose `load` rejects; assert the style text equals `buildDynamicCss(mergePalette(undefined), true)` and contains `border-right-color`
+  - test-tags: UNIT
+  - mechanism: 2026-10-17T12:58:22Z @kj the `.catch` on `settingRegistry.load` in `src/index.ts` calls `applyDynamicStyle(buildDynamicCss(mergePalette(undefined), true))`
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:05Z @kj closed: verified
+- [x] `ACC-DIVIDE-52` **Palette copies pinned** - MEDIUM; the `palette` default in `schema/plugin.json`, `DEFAULT_PALETTE` in `src/dynamicStyle.ts` and the 24 `--jp-colourful-tab-*` values in `style/base.css` are identical; the schema defaults validate under the registry composer (ajv `useDefaults`); the `dividerContrast` enum, default and description ratios match `CONTRAST_TARGETS`
+  - evidence: jest dynamicStyle.spec.ts 'default palette copies' 6/6 pass: schema default equals `DEFAULT_PALETTE`, schema defaults compose under ajv, `dividerContrast` enum, default and description match `CONTRAST_TARGETS`, `style/base.css` equals `DEFAULT_PALETTE`; jest 111/111
+  - test: Jest `default palette copies` reads the schema and the CSS from disk and compares them with the constants
+  - test-tags: UNIT
+  - mechanism: 2026-10-17T12:58:22Z @kj three hand-kept copies (`schema/plugin.json` default, `DEFAULT_PALETTE`, `style/base.css`) held identical by anti-drift unit tests that read the schema and the stylesheet from disk and compose the schema with ajv `useDefaults`
+  - log: 2026-10-17T12:58:22Z @kj added
+  - log: 2026-10-17T13:02:05Z @kj closed: verified
+- [x] `ACC-DIVIDE-53` **Muted light palette** - MEDIUM; the light palette (v1.1.21) holds every inactive shade at CIELAB L* 80, C* 18 and every active shade at L* 72.5, C* 28 (lemon and mint active C* 38), each within 0.5 of the target: rose `#e8bbc6`/`#e39fb1`, peach `#ddc2a7`/`#d2ab82`, lemon `#ccc8a6`/`#bab56d`, mint `#b3cdb1`/`#87c086`, sky `#a5cce5`/`#77bae0`, lavender `#cfc1e1`/`#bfa9da`; a light-theme rose tab renders `rgb(232, 187, 198)` inactive and `rgb(227, 159, 177)` current
+  - evidence: jest divider-settings.spec.ts 'muted light palette (v1.1.21)' 3/3 pass (inactive L* 79.9-80.1 C* 17.8-18.1; active L* 72.4-72.6 C* 27.8-28.0, lemon/mint 38.1-38.3); Galata 'contrast and palette settings apply live' asserts rose rgb(232,187,198) inactive, rgb(227,159,177) current; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)
+  - test: compute CIELAB L* and C* of every `DEFAULT_PALETTE.light` shade, assert each within 0.5 of its target; render a rose tab in the light theme, compare its computed background inactive and current
+  - test-tags: UNIT, E2E
+  - mechanism: 2026-10-17T12:58:22Z @kj one fixed palette derived in CIELAB against the Steel light tab bar, hue angles kept from the previous pastels, no per-theme derivation at runtime
+  - log: 2026-10-17T12:58:22Z @kj added; reason: the six hex pairs and the rendered rose values are the criterion
+  - log: 2026-10-17T13:02:05Z @kj closed: verified on the source build
+  - log: 2026-10-17T13:02:53Z @kj edited evidence "jest divider-settings.spec.ts 'muted light palette (v1.1.21)' 3/3 pass (inactive L* 79.9-80.1 C* 17.8-18.1; active L* 72.4-72.6 C* 27.8-28.0, lemon/mint 38.1-38.3); Galata 'contrast and palette settings apply live' asserts rose rgb(232,187,198) inactive, rgb(227,159,177) current; Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)" -> "jest divider-settings.spec.ts 'muted light palette (v1.1.21)' 3/3 pass (inactive L* 79.9-80.1 C* 17.8-18.1; active L* 72.4-72.6 C* 27.8-28.0, lemon/mint 38.1-38.3); Galata 'contrast and palette settings apply live' asserts rose rgb(232,187,198) inactive, rgb(227,159,177) current; jest 111/111, Galata 41/41 on `remoteEntry.dada9604630ca255.js` (`logs/galata-9301.log`)"

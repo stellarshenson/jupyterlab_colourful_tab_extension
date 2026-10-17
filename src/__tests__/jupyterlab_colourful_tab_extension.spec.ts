@@ -110,6 +110,8 @@ interface IHarness {
 function activatePlugin(options: {
   fingerprints: Record<string, string> | null;
   terminals?: Array<{ widgetId: string; sessionName: string }>;
+  /** The main-area widgets, where a pick or a clear holds its colour. */
+  widgets?: Widget[];
 }): IHarness {
   jest.resetModules();
   const fingerprintClient = require('../fingerprints')
@@ -129,6 +131,7 @@ function activatePlugin(options: {
       addCommand: (id: string, spec: { execute: () => unknown }) =>
         commands.set(id, spec.execute)
     },
+    shell: { widgets: () => options.widgets ?? [] },
     restored
   } as unknown as JupyterFrontEnd;
   const tracker = {
@@ -366,6 +369,36 @@ describe('colourChanged', () => {
     expect(seen).toEqual([{ widgetId: 'terminal-1', colourId: null }]);
   });
 
+  it('lets a consumer that answers the signal take ownership of an unclaimed tab', async () => {
+    // A consumer that answers `colourChanged` with `setColour` runs
+    // `releaseMenuColour` synchronously, which drops the menu entry the
+    // announcement is about (ACC-ACTIVE-12). Writing the entry after the signal
+    // puts it back, and the colour the consumer cleared repaints on the next
+    // pass
+    makeDockPanel();
+    const tab = addTab('terminal-1', '');
+    const h = activatePlugin({ fingerprints: { '3': 'pty-a' }, terminals });
+    await flushPromises();
+    const w = widget('terminal-1');
+    h.api.colourChanged.connect(() => {
+      h.api.setColour(w, 'sky');
+    });
+
+    rightClick(tab);
+    await h.execute('colourful-tab:set-mint');
+
+    expect(readStore()).toEqual({});
+
+    h.api.setColour(w, null);
+    tab.className = 'lm-TabBar-tab';
+    await flushPromises();
+    jest.advanceTimersByTime(50);
+
+    expect(
+      Array.from(tab.classList).filter(c => c.startsWith('jp-colourful-tab-'))
+    ).toEqual([]);
+  });
+
   it('stores the cached fingerprint alongside a terminal colour, asking again for nothing', async () => {
     makeDockPanel();
     const tab = addTab('terminal-1', '');
@@ -544,12 +577,12 @@ describe('claim', () => {
     expect(readStore()).toEqual({});
   });
 
-  it('deletes the entry a pick on a claimed tab replaces', async () => {
-    // Nothing fails anywhere in this sequence. The owner has not filed the new
-    // colour yet - it holds the choice pending while the conversation is
-    // unreadable - and Lumino rebuilds the tab's class attribute from the
-    // widget title on the next tab switch, which is what the strip below is.
-    // The older entry left standing repaints over the pick the user just made
+  it('keeps the entry a pick on a claimed tab replaces', async () => {
+    // The entry is the file's colour, shared by every view of it in every
+    // window, so a pick on one claimed view leaves it for the others. The
+    // acted view is not repainted from it again this session - otherwise the
+    // older entry would repaint over the pick as soon as Lumino rebuilds the
+    // tab's class attribute from the widget title
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ 'terminal:3': { colour: 2, fp: 'pty-a' } })
@@ -562,7 +595,9 @@ describe('claim', () => {
 
     rightClick(tab);
     await h.execute('colourful-tab:set-mint');
-    expect(readStore()).toEqual({});
+    expect(readStore()).toEqual({
+      'terminal:3': { colour: 2, fp: 'pty-a' }
+    });
 
     tab.className = 'lm-TabBar-tab';
     h.finishRestore();
@@ -571,7 +606,10 @@ describe('claim', () => {
     expect(tab.classList.contains('jp-colourful-tab-lemon')).toBe(false);
   });
 
-  it('deletes the entry a clear on a claimed tab replaces', async () => {
+  it('keeps the entry a clear on a claimed tab replaces', async () => {
+    // Same rule as a pick: the entry stays for the file's other views, and
+    // the acted claimed view is not repainted from it again this session, so
+    // the Clear the user just made is not silently undone
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ 'terminal:3': { colour: 2, fp: 'pty-a' } })
@@ -581,11 +619,84 @@ describe('claim', () => {
     const h = activatePlugin({ fingerprints: { '3': 'pty-a' }, terminals });
     await flushPromises();
     h.api.claim(widget('terminal-1'));
+    // The observer is what repaints after Lumino rewrites a tab's class;
+    // bring it live before the Clear so a repaint would reach the assertion
+    h.finishRestore();
+    await flushPromises();
 
     rightClick(tab);
     await h.execute('colourful-tab:clear');
 
-    expect(readStore()).toEqual({});
+    expect(readStore()).toEqual({
+      'terminal:3': { colour: 2, fp: 'pty-a' }
+    });
+    await flushPromises();
+    expect(
+      Array.from(tab.classList).filter(c => c.startsWith('jp-colourful-tab-'))
+    ).toEqual([]);
+  });
+
+  it('keeps a Clear on a claimed view cleared after the claim is released', async () => {
+    // The mark records the user's choice on this view, not the owner's hold on
+    // it: the owner disposes its claim when its widget goes away, and the
+    // stored entry must not repaint the view after that either
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ 'terminal:3': { colour: 2, fp: 'pty-a' } })
+    );
+    makeDockPanel();
+    const tab = addTab('terminal-1', '');
+    const h = activatePlugin({ fingerprints: { '3': 'pty-a' }, terminals });
+    await flushPromises();
+    const claim = h.api.claim(widget('terminal-1'));
+    h.finishRestore();
+    await flushPromises();
+
+    rightClick(tab);
+    await h.execute('colourful-tab:clear');
+    claim.dispose();
+
+    tab.className = 'lm-TabBar-tab';
+    await flushPromises();
+    jest.advanceTimersByTime(50);
+
+    expect(
+      Array.from(tab.classList).filter(c => c.startsWith('jp-colourful-tab-'))
+    ).toEqual([]);
+    expect(readStore()).toEqual({ 'terminal:3': { colour: 2, fp: 'pty-a' } });
+  });
+
+  it('lets a later unclaimed pick release the mark it supersedes', async () => {
+    // The mark stops the OLD entry repainting over the claimed-time choice.
+    // Once the claim is released and an unclaimed pick rewrites the entry, that
+    // predicate no longer holds: the stored colour is the user's newer choice
+    // and must show after an API clear
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ 'terminal:3': { colour: 2, fp: 'pty-a' } })
+    );
+    makeDockPanel();
+    const tab = addTab('terminal-1', '');
+    const h = activatePlugin({ fingerprints: { '3': 'pty-a' }, terminals });
+    await flushPromises();
+    const claim = h.api.claim(widget('terminal-1'));
+    h.finishRestore();
+    await flushPromises();
+
+    rightClick(tab);
+    await h.execute('colourful-tab:clear');
+    claim.dispose();
+
+    rightClick(tab);
+    await h.execute('colourful-tab:set-mint');
+    expect(readStore()).toEqual({ 'terminal:3': { colour: 3, fp: 'pty-a' } });
+
+    h.api.setColour(widget('terminal-1'), null);
+    tab.className = 'lm-TabBar-tab';
+    await flushPromises();
+    jest.advanceTimersByTime(50);
+
+    expect(tab.classList.contains('jp-colourful-tab-mint')).toBe(true);
   });
 
   it('leaves a claimed tab blank when the stored entry is unverified', async () => {
@@ -749,6 +860,449 @@ describe('claim', () => {
     rightClick(tab);
     await h.execute('colourful-tab:set-mint');
     expect(readStore()).toEqual({ 'terminal:3': { colour: 3, fp: 'pty-a' } });
+  });
+});
+
+describe('a restored file tab', () => {
+  it('shows its stored colour once its path arrives in the title', async () => {
+    // ACC-IDENT-23, ACC-IDENT-26 - a restored document tab has an empty
+    // `title` attribute at `app.restored`, so the first repaint cannot resolve
+    // its path. The path then arrives as a `title` change and nothing else; a
+    // background tab gets no class or child change that would repaint it
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ '/home/lab/x.ipynb': 4 })
+    );
+    makeDockPanel();
+    const tab = addTab('notebook-1', '');
+    const h = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    h.finishRestore();
+    await flushPromises();
+    expect(tab.classList.contains('jp-colourful-tab-sky')).toBe(false);
+
+    tab.setAttribute('title', 'Name: x.ipynb\nPath: /home/lab/x.ipynb');
+    await flushPromises();
+    jest.advanceTimersByTime(50);
+
+    expect(tab.classList.contains('jp-colourful-tab-sky')).toBe(true);
+    expect(readStore()).toEqual({ '/home/lab/x.ipynb': 4 });
+  });
+
+  it('shows its stored colour on every view of the same file', async () => {
+    // One path open in two views gives two tabs under one stable id. Keyed
+    // one tab per id, only the last tab in DOM order was ever repainted
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ '/home/lab/x.ipynb': 4 })
+    );
+    makeDockPanel();
+    const first = addTab(
+      'notebook-1',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const second = addTab(
+      'notebook-2',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const h = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    h.finishRestore();
+    await flushPromises();
+
+    expect(first.classList.contains('jp-colourful-tab-sky')).toBe(true);
+    expect(second.classList.contains('jp-colourful-tab-sky')).toBe(true);
+  });
+
+  it('a pick on one view repaints the other view and its title hold', async () => {
+    // One stable id, two tabs. The pick painted and titled only the
+    // right-clicked tab, so Lumino's next re-render of the other view restored
+    // the colour of the earlier pick there - one file shown in two colours
+    makeDockPanel();
+    const first = addTab(
+      'notebook-1',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const second = addTab(
+      'notebook-2',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const firstWidget = widget('notebook-1');
+    const secondWidget = widget('notebook-2');
+    const h = activatePlugin({
+      fingerprints: {},
+      widgets: [firstWidget, secondWidget]
+    });
+    await flushPromises();
+
+    rightClick(first);
+    await h.execute('colourful-tab:set-rose');
+    rightClick(second);
+    await h.execute('colourful-tab:set-sky');
+
+    // What Lumino renders onto view A from its widget title
+    first.className = 'lm-TabBar-tab ' + firstWidget.title.className;
+
+    expect(first.classList.contains('jp-colourful-tab-sky')).toBe(true);
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(false);
+    expect(second.classList.contains('jp-colourful-tab-sky')).toBe(true);
+  });
+
+  it('Clear on one view clears the other view and its title hold', async () => {
+    // The clear painted and titled only the right-clicked tab, so the other
+    // view kept the colour its title was given by the earlier pick
+    makeDockPanel();
+    const first = addTab(
+      'notebook-1',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const second = addTab(
+      'notebook-2',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const firstWidget = widget('notebook-1');
+    const secondWidget = widget('notebook-2');
+    const h = activatePlugin({
+      fingerprints: {},
+      widgets: [firstWidget, secondWidget]
+    });
+    await flushPromises();
+
+    rightClick(first);
+    await h.execute('colourful-tab:set-rose');
+    rightClick(second);
+    await h.execute('colourful-tab:clear');
+
+    // What Lumino renders onto view A from its widget title
+    first.className = 'lm-TabBar-tab ' + firstWidget.title.className;
+
+    expect(
+      Array.from(first.classList).filter(c => c.startsWith('jp-colourful-tab-'))
+    ).toEqual([]);
+    expect(
+      Array.from(second.classList).filter(c =>
+        c.startsWith('jp-colourful-tab-')
+      )
+    ).toEqual([]);
+  });
+
+  it("a pick and a Clear on one view leave a claimed sibling's owner colour alone", async () => {
+    // The fan-out paints every tab under one stable id without asking whether
+    // the other view is claimed. On a claimed view the painter is the owner, so
+    // repainting it replaces the owner's colour while `colourChanged` names
+    // only the acted widget; the claimed branch stores nothing, so the
+    // sibling's colour would also vanish on reload
+    makeDockPanel();
+    const first = addTab(
+      'notebook-1',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const second = addTab(
+      'notebook-2',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const firstWidget = widget('notebook-1');
+    const secondWidget = widget('notebook-2');
+    const h = activatePlugin({
+      fingerprints: {},
+      widgets: [firstWidget, secondWidget]
+    });
+    await flushPromises();
+    h.api.claim(secondWidget);
+    h.api.setColour(secondWidget, 'mint');
+    // What Lumino renders onto the claimed view from its widget title
+    second.classList.add('jp-colourful-tab-mint');
+    const seen: IColourChoice[] = [];
+    h.api.colourChanged.connect((_, choice) => seen.push(choice));
+
+    rightClick(first);
+    await h.execute('colourful-tab:set-rose');
+
+    expect(second.classList.contains('jp-colourful-tab-mint')).toBe(true);
+    expect(second.classList.contains('jp-colourful-tab-rose')).toBe(false);
+    expect(secondWidget.title.className).toBe('jp-colourful-tab-mint');
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(true);
+    expect(seen).toEqual([{ widgetId: 'notebook-1', colourId: 'rose' }]);
+    expect(readStore()).toEqual({ '/home/lab/x.ipynb': 0 });
+
+    // A pick on the claimed view itself paints only that view
+    rightClick(second);
+    await h.execute('colourful-tab:set-sky');
+
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(true);
+    expect(first.classList.contains('jp-colourful-tab-sky')).toBe(false);
+    expect(second.classList.contains('jp-colourful-tab-sky')).toBe(true);
+    // The pick is view-local, so the file's entry - the unclaimed view's
+    // colour - is kept
+    expect(readStore()).toEqual({ '/home/lab/x.ipynb': 0 });
+
+    // The owner paints its colour again; a Clear on the unclaimed view must
+    // leave that colour where it is
+    h.api.setColour(secondWidget, 'mint');
+    second.classList.remove('jp-colourful-tab-sky');
+    second.classList.add('jp-colourful-tab-mint');
+
+    rightClick(first);
+    await h.execute('colourful-tab:clear');
+
+    expect(second.classList.contains('jp-colourful-tab-mint')).toBe(true);
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(false);
+  });
+
+  it('keeps a shared entry when a pick on a claimed view replaces it', async () => {
+    // One file in two views stores one entry for the file. A pick on the
+    // claimed view paints only that view, so deleting the shared entry would
+    // take the unclaimed view's colour with it on the next reload
+    makeDockPanel();
+    const first = addTab(
+      'notebook-1',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const second = addTab(
+      'notebook-2',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const firstWidget = widget('notebook-1');
+    const secondWidget = widget('notebook-2');
+    const h = activatePlugin({
+      fingerprints: {},
+      widgets: [firstWidget, secondWidget]
+    });
+    await flushPromises();
+
+    rightClick(first);
+    await h.execute('colourful-tab:set-rose');
+    h.api.claim(secondWidget);
+    h.api.setColour(secondWidget, 'mint');
+    second.classList.add('jp-colourful-tab-mint');
+
+    rightClick(second);
+    await h.execute('colourful-tab:set-sky');
+
+    expect(readStore()).toEqual({ '/home/lab/x.ipynb': 0 });
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(true);
+
+    // A reload: the classes Lumino rendered are gone, so only the stored
+    // entry can repaint the unclaimed view
+    first.className = 'lm-TabBar-tab';
+    second.className = 'lm-TabBar-tab';
+    const reloaded = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    reloaded.finishRestore();
+    await flushPromises();
+
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(true);
+  });
+
+  it('keeps a shared entry when a Clear on a claimed view replaces it', async () => {
+    // Same shared entry, replaced by a Clear this time. The Clear is
+    // view-local, so the unclaimed view keeps the colour the entry records
+    makeDockPanel();
+    const first = addTab(
+      'notebook-1',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const second = addTab(
+      'notebook-2',
+      'Name: x.ipynb\nPath: /home/lab/x.ipynb'
+    );
+    const firstWidget = widget('notebook-1');
+    const secondWidget = widget('notebook-2');
+    const h = activatePlugin({
+      fingerprints: {},
+      widgets: [firstWidget, secondWidget]
+    });
+    await flushPromises();
+
+    rightClick(first);
+    await h.execute('colourful-tab:set-rose');
+    h.api.claim(secondWidget);
+    h.api.setColour(secondWidget, 'mint');
+    second.classList.add('jp-colourful-tab-mint');
+    // The observer is what repaints after Lumino rewrites a tab's class;
+    // bring it live before the Clear so a repaint would reach the assertion
+    h.finishRestore();
+    await flushPromises();
+
+    rightClick(second);
+    await h.execute('colourful-tab:clear');
+
+    expect(readStore()).toEqual({ '/home/lab/x.ipynb': 0 });
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(true);
+    expect(second.classList.contains('jp-colourful-tab-mint')).toBe(false);
+    await flushPromises();
+    expect(second.classList.contains('jp-colourful-tab-rose')).toBe(false);
+
+    first.className = 'lm-TabBar-tab';
+    second.className = 'lm-TabBar-tab';
+    const reloaded = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    reloaded.finishRestore();
+    await flushPromises();
+
+    expect(first.classList.contains('jp-colourful-tab-rose')).toBe(true);
+  });
+
+  it('reads a legacy path: key as the file whose path it was', async () => {
+    // A pre-1.1.23 store kept a file's path verbatim. `path:terminal:3` was
+    // the file of that name and must not be read as the escaped form of file
+    // `terminal:3` - that painted the wrong file and orphaned the rightful one
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ 'path:terminal:3': 4 }));
+    makeDockPanel();
+    const terminalNamedFile = addTab(
+      'notebook-1',
+      'Name: terminal:3\nPath: terminal:3'
+    );
+    const pathNamedFile = addTab(
+      'notebook-2',
+      'Name: path:terminal:3\nPath: path:terminal:3'
+    );
+    const pathThreeFile = addTab('notebook-3', 'Name: path:3\nPath: path:3');
+    const h = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    h.finishRestore();
+    await flushPromises();
+
+    expect(pathNamedFile.classList.contains('jp-colourful-tab-sky')).toBe(true);
+    expect(terminalNamedFile.classList.contains('jp-colourful-tab-sky')).toBe(
+      false
+    );
+
+    // A second legacy key, read on the next load
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ 'path:3': 5 }));
+    terminalNamedFile.className = 'lm-TabBar-tab';
+    pathNamedFile.className = 'lm-TabBar-tab';
+    pathThreeFile.className = 'lm-TabBar-tab';
+    const reloaded = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    reloaded.finishRestore();
+    await flushPromises();
+
+    expect(pathThreeFile.classList.contains('jp-colourful-tab-lavender')).toBe(
+      true
+    );
+    expect(
+      terminalNamedFile.classList.contains('jp-colourful-tab-lavender')
+    ).toBe(false);
+  });
+
+  it('is repainted before the browser can show the class Lumino rewrote', async () => {
+    // Lumino rewrites the class attribute whenever the tab becomes or stops
+    // being current. The fake clock holds the 50 ms debounced refresh, so only
+    // a repaint inside the observer callback - a microtask, run before the
+    // next frame is painted - puts the colour back here
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ '/home/lab/x.ipynb': 4 })
+    );
+    makeDockPanel();
+    const tab = addTab('notebook-1', 'Name: x.ipynb\nPath: /home/lab/x.ipynb');
+    const h = activatePlugin({ fingerprints: {} });
+    await flushPromises();
+    h.finishRestore();
+    await flushPromises();
+    expect(tab.classList.contains('jp-colourful-tab-sky')).toBe(true);
+
+    tab.className = 'lm-TabBar-tab';
+    await flushPromises();
+
+    expect(tab.classList.contains('jp-colourful-tab-sky')).toBe(true);
+  });
+});
+
+describe('a colour another window stored', () => {
+  // Every browser window open on the same lab writes the one localStorage
+  // key. A window that writes back the map it read at activation erases
+  // every entry another window stored after that read
+  const terminals = [{ widgetId: 'terminal-1', sessionName: '3' }];
+  const tab = (widgetId: string): HTMLElement =>
+    document.querySelector(`[data-id="${widgetId}"]`) as HTMLElement;
+  const terminal = { colour: 2, fp: 'pty-a' };
+
+  it.each([
+    {
+      operation: 'a pick on a file tab',
+      run: async (h: IHarness): Promise<void> => {
+        rightClick(tab('notebook-1'));
+        await h.execute('colourful-tab:set-sky');
+      },
+      left: {
+        '/home/lab/x.ipynb': 4,
+        '/home/lab/y.ipynb': 1,
+        'terminal:3': terminal
+      }
+    },
+    {
+      operation: 'Clear on a second file tab',
+      run: async (h: IHarness): Promise<void> => {
+        rightClick(tab('notebook-2'));
+        await h.execute('colourful-tab:clear');
+      },
+      left: { 'terminal:3': terminal }
+    },
+    {
+      operation: 'setColour on an unclaimed tab with a stored entry',
+      run: async (h: IHarness): Promise<void> => {
+        h.api.setColour(widget('notebook-2'), 'sky');
+      },
+      left: { 'terminal:3': terminal }
+    },
+    {
+      operation: 'a runningChanged prune',
+      run: async (h: IHarness): Promise<void> => {
+        h.fingerprintClient.mockResolvedValue({ '3': 'pty-b' });
+        h.emitRunning(['3']);
+        await flushPromises();
+      },
+      left: { '/home/lab/y.ipynb': 1 }
+    }
+  ])('survives $operation', async ({ run, left }) => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ '/home/lab/y.ipynb': 1, 'terminal:3': terminal })
+    );
+    makeDockPanel();
+    addTab('notebook-1', 'Name: x.ipynb\nPath: /home/lab/x.ipynb');
+    addTab('notebook-2', 'Name: y.ipynb\nPath: /home/lab/y.ipynb');
+    addTab('terminal-1', '');
+    const h = activatePlugin({ fingerprints: { '3': 'pty-a' }, terminals });
+    await flushPromises();
+    // The other window's write, made after this window read the key
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...readStore(), '/home/lab/other.ipynb': 2 })
+    );
+
+    await run(h);
+
+    expect(readStore()).toEqual({ ...left, '/home/lab/other.ipynb': 2 });
+  });
+});
+
+describe('the colour held on the widget title', () => {
+  it('a pick made before the path arrives gives way to later picks and Clear', async () => {
+    // A document's tab has no path until its model loads, so the first pick
+    // is held on the widget title. A later pick or Clear that leaves the title
+    // alone is undone the next time Lumino renders the tab from that title
+    makeDockPanel();
+    const tab = addTab('notebook-1', '');
+    const w = widget('notebook-1');
+    const h = activatePlugin({ fingerprints: {}, widgets: [w] });
+    await flushPromises();
+
+    rightClick(tab);
+    await h.execute('colourful-tab:set-rose');
+    expect(w.title.className).toBe('jp-colourful-tab-rose');
+
+    tab.setAttribute('title', 'Name: x.ipynb\nPath: /home/lab/x.ipynb');
+    rightClick(tab);
+    await h.execute('colourful-tab:set-sky');
+    expect(w.title.className).toBe('jp-colourful-tab-sky');
+    expect(readStore()).toEqual({ '/home/lab/x.ipynb': 4 });
+
+    await h.execute('colourful-tab:clear');
+    expect(w.title.className).toBe('');
+    expect(readStore()).toEqual({});
   });
 });
 

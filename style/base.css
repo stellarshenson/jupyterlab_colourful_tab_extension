@@ -99,9 +99,12 @@
   background-color: var(--jp-colourful-tab-lavender);
 }
 
-/* Tab colours - apply to tab, inner elements, and shadow DOM parts */
+/* Tab colours - apply to tab, inner elements, and shadow DOM parts.
+   Inner elements are painted only inside a dock tab: the same class sits on
+   the current panel's jp-toolbar, where a descendant rule would also paint
+   every button and suppress its hover and pressed fills (DEF-TOOL-10). */
 .jp-colourful-tab-rose,
-.jp-colourful-tab-rose * {
+.lm-TabBar-tab.jp-colourful-tab-rose * {
   background-color: var(--jp-colourful-tab-rose) !important;
 }
 
@@ -110,7 +113,7 @@
 }
 
 .jp-colourful-tab-peach,
-.jp-colourful-tab-peach * {
+.lm-TabBar-tab.jp-colourful-tab-peach * {
   background-color: var(--jp-colourful-tab-peach) !important;
 }
 
@@ -119,7 +122,7 @@
 }
 
 .jp-colourful-tab-lemon,
-.jp-colourful-tab-lemon * {
+.lm-TabBar-tab.jp-colourful-tab-lemon * {
   background-color: var(--jp-colourful-tab-lemon) !important;
 }
 
@@ -128,7 +131,7 @@
 }
 
 .jp-colourful-tab-mint,
-.jp-colourful-tab-mint * {
+.lm-TabBar-tab.jp-colourful-tab-mint * {
   background-color: var(--jp-colourful-tab-mint) !important;
 }
 
@@ -137,7 +140,7 @@
 }
 
 .jp-colourful-tab-sky,
-.jp-colourful-tab-sky * {
+.lm-TabBar-tab.jp-colourful-tab-sky * {
   background-color: var(--jp-colourful-tab-sky) !important;
 }
 
@@ -146,7 +149,7 @@
 }
 
 .jp-colourful-tab-lavender,
-.jp-colourful-tab-lavender * {
+.lm-TabBar-tab.jp-colourful-tab-lavender * {
   background-color: var(--jp-colourful-tab-lavender) !important;
 }
 
@@ -161,43 +164,37 @@
    the strip below the active tab the same shade as the tab (regression from the
    1.1.5 active-tab shade, which moved the tab but left the toolbar on base). */
 jp-toolbar.jp-colourful-tab-rose,
-jp-toolbar.jp-colourful-tab-rose *,
 jp-toolbar.jp-colourful-tab-rose::part(positioning-region) {
   background-color: var(--jp-colourful-tab-rose-active) !important;
 }
 
 jp-toolbar.jp-colourful-tab-peach,
-jp-toolbar.jp-colourful-tab-peach *,
 jp-toolbar.jp-colourful-tab-peach::part(positioning-region) {
   background-color: var(--jp-colourful-tab-peach-active) !important;
 }
 
 jp-toolbar.jp-colourful-tab-lemon,
-jp-toolbar.jp-colourful-tab-lemon *,
 jp-toolbar.jp-colourful-tab-lemon::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lemon-active) !important;
 }
 
 jp-toolbar.jp-colourful-tab-mint,
-jp-toolbar.jp-colourful-tab-mint *,
 jp-toolbar.jp-colourful-tab-mint::part(positioning-region) {
   background-color: var(--jp-colourful-tab-mint-active) !important;
 }
 
 jp-toolbar.jp-colourful-tab-sky,
-jp-toolbar.jp-colourful-tab-sky *,
 jp-toolbar.jp-colourful-tab-sky::part(positioning-region) {
   background-color: var(--jp-colourful-tab-sky-active) !important;
 }
 
 jp-toolbar.jp-colourful-tab-lavender,
-jp-toolbar.jp-colourful-tab-lavender *,
 jp-toolbar.jp-colourful-tab-lavender::part(positioning-region) {
   background-color: var(--jp-colourful-tab-lavender-active) !important;
 }
 
 /* Active (selected) tab - distinct shade so the selected tab stands out.
-   Darker in the dark theme, brighter/more saturated in the light theme. */
+   Darker than the inactive shade in both themes. */
 .lm-mod-current.jp-colourful-tab-rose,
 .lm-mod-current.jp-colourful-tab-rose * {
   background-color: var(--jp-colourful-tab-rose-active) !important;

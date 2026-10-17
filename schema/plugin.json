@@ -29,13 +29,13 @@
   "properties": {
     "dynamicDivider": {
       "title": "Dynamic divider between same-coloured tabs",
-      "description": "When two adjacent tabs share the same colour, recolour the 1px divider between them with a computed contrastive grey (darker in the light theme, brighter in the dark theme) so the tabs stay visually separate.",
+      "description": "When two adjacent inactive tabs share the same colour, recolour the 1px divider between them with a computed contrastive grey (darker in the light theme, brighter in the dark theme) so the tabs stay visually separate.",
       "type": "boolean",
       "default": true
     },
     "dividerContrast": {
       "title": "Divider contrast",
-      "description": "Strength of the divider grey between adjacent same-coloured tabs: low targets 2:1 (a subtle hairline), medium 3:1 (the WCAG non-text minimum), high 4:1 (strongest separation).",
+      "description": "Strength of the divider grey between adjacent inactive same-coloured tabs: low targets 2:1 (a subtle hairline), medium 3:1 (the WCAG non-text minimum), high 4:1 (strongest separation).",
       "type": "string",
       "enum": ["low", "medium", "high"],
       "default": "medium"

@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 1.1.24
+
+### Fixed
+
+- A second browser window no longer erases the colours another window stored
+- One file open in two views keeps its colour in every view
+- Coloured tabs and their toolbar strip no longer flash the stock colour on every tab switch and save
+- A colour picked while a document loads no longer overrides a later pick or Clear
+- A claimed file tab restores its stored colour after a reload
+- A pick or Clear on one view reaches every view of the same file
+- A file whose name contains `Path: ` no longer has its stored colour keyed to the name tail
+- File paths beginning with `terminal:` or `path:` no longer collide with reserved storage keys
+- A menu action on a claimed view no longer deletes the stored colour other views and windows rely on
+
+### Changed
+
+- A menu pick or Clear on a claimed view writes nothing to storage; the acted view keeps the user's choice for the page session, and the stored colour stays for the file's other views
+- Extension template updated to v4.6.5 and the canonical Makefile to 1.46, with `@jupyterlab/*` 4.6.4, eslint 9, typescript-eslint 8 and Galata 5.6.4
+
 ## 1.1.21
 
 ### Changed

@@ -32,14 +32,14 @@ Assign colours to tabs via right-click context menu for easy visual identificati
 
 **Key features**:
 
-- Right-click any tab to assign a colour from the "Set Tab Colour" submenu
+- Right-click any tab to assign a colour from the "Tab Colour" submenu
 - Selected (active) tab shows a distinct shade of its colour so it stands out from other coloured tabs
 - Colours persist across browser refreshes via localStorage - a file keeps its colour by path, a terminal for as long as its session runs
 - Notebook toolbar matches the active tab colour
 - Adjacent inactive tabs sharing the same colour keep a visible divider: the 1px seam between them is recoloured with a contrastive grey computed from the tab colour (darker in the light theme, brighter in the dark theme); the active tab is excluded - its distinct shade already sets it apart. Toggleable via the `dynamicDivider` setting, with strength selectable via `dividerContrast` (low 2:1 hairline, medium 3:1, high 4:1)
-- Editable palette in the Settings Editor (Settings → Colourful Tabs): inactive and active shades per colour name, for both themes - edits apply live to tabs, toolbar, menu swatches and divider greys
+- Editable palette in the Settings Editor (Settings Editor → Colourful Tab Extension): inactive and active shades per colour name, for both themes - edits apply live to tabs, toolbar, menu swatches and divider greys
 - A terminal's colour is released once its session ends, so the next terminal to reuse that number starts clear
-- Tabs with no lasting identity of their own (the launcher, for example) can still be coloured, but the colour lasts only for the session
+- Tabs with no lasting identity of their own (the launcher, for example) can still be coloured, but the colour is not stored: it lasts until the tab is closed or the page is reloaded
 
 Yes, this is yet another mass-produced JupyterLab extension that does one trivially simple thing. We are almost embarrassed by how utterly unremarkable it is - just some CSS classes and a context menu. But someone had to do it, and here we are. You're welcome.
 
@@ -71,7 +71,7 @@ The package installs a `jupyter_server` extension next to the frontend. It serve
 - The browser cannot answer this itself: `GET /api/terminals` reports `name` and `last_activity` only, and `last_activity` moves forward for a reused name exactly as it does for a busy one, so it cannot separate one incarnation of a name from the next
 - Terminal names are slots - the server hands a closed terminal's name to the next terminal created - so a stored colour is kept only while the fingerprint behind its name is unchanged, and a recycled name starts clear
 - With the route unavailable (server extension disabled, or an older release) the frontend falls back to dropping the colours of terminals the server no longer lists as running
-- **Upgrading from an earlier release clears the terminal tab colours you had set.** They were stored with no fingerprint, and an entry that cannot be tied to a live pty process is indistinguishable from the stale entry this check exists to remove. It happens once, at the first start after the upgrade, and only to terminal tabs - colours on file tabs are keyed by path and are untouched
+- **Upgrading from an earlier release clears the terminal tab colours you had set.** They were stored with no fingerprint, and an entry that cannot be tied to a live pty process is indistinguishable from the stale entry this check exists to remove. It happens once, at the first start after the upgrade, and only to terminal tabs - colours on file tabs are keyed by path and are untouched, except a file whose path begins `terminal:`: that colour was stored in the terminal namespace and is dropped with the terminals
 
 ## Extension API
 
@@ -81,8 +81,8 @@ Other extensions can tint a widget's tab, learn what the user picked on it, and 
 - `setColour(widget, colourId)` tints a tab, where `colourId` is one of `rose`, `peach`, `lemon`, `mint`, `sky`, `lavender`, or `null` to clear. The tint rides the widget's Lumino `title.className`, so it survives tab re-renders and reordering with no DOM querying. On an unclaimed tab it also drops whatever the right-click menu had stored for that tab, so the two do not fight over it
 - `colourChanged` is a Lumino signal carrying `{ widgetId, colourId }` for every colour picked from the menu and every clear, with `colourId` null for a clear. It is the only way to learn of a choice: a stored value is a leftover rather than evidence of a click, and a claimed tab is never stored at all
 - `claim(widget)` declares that the caller persists this tab's colour and returns an `IDisposable` that releases it. Claims are counted, so one holder's dispose leaves another holder's claim standing
-- The claim suppresses persistence: a pick or a clear on a claimed tab paints it and is announced, writes nothing, and deletes any entry stored for that tab before, because the user has just replaced the choice it recorded
-- A stored colour is still restored onto a tab carrying no colour class, which for a claimed tab means its owner has painted nothing. There it must also still match the fingerprint of the terminal now behind its name - an unverified entry is what a recycled name leaves behind - so the owner's colour wins whenever it has one and a verified earlier choice of the user's shows when it does not. Nothing is handed over and no second copy of the colour is made
+- The claim suppresses persistence: a pick or a clear on a claimed tab paints it and is announced, and writes nothing at all. The entry stored for the tab is left in place, because it is the file's (or terminal's) colour shared by every view of it, in this window or another; the acted view is not repainted from it again for the session unless a later menu pick on that view stores a newer colour, so the choice is not undone before the owner files it. A claimed choice is never stored, so a reload can show the stored colour again on a view whose owner paints nothing
+- A stored colour is still restored onto a tab carrying no colour class, which for a claimed tab means its owner has painted nothing and the user has not picked or cleared that view this session. There it must also still match the fingerprint of the terminal now behind its name - an unverified entry is what a recycled name leaves behind - so the owner's colour wins whenever it has one and a verified earlier choice of the user's shows when it does not. Nothing is handed over and no second copy of the colour is made
 
 ```ts
 import {
