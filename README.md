@@ -45,7 +45,7 @@ Yes, this is yet another mass-produced JupyterLab extension that does one trivia
 
 ## Requirements
 
-- JupyterLab >= 4.0.0
+- JupyterLab >= 4.6.0
 
 ## Install
 

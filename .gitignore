@@ -139,3 +139,6 @@ uv.lock
 
 # stray screenshots dropped in the repo root (committed assets live in .resources/)
 /*.png
+
+# Run output
+tmp/

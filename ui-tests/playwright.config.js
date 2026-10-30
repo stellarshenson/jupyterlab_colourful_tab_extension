@@ -1,7 +1,7 @@
 /**
  * Configuration for Playwright using default from @jupyterlab/galata
  *
- * `JLAB_TEST_PORT` overrides the test server port (default 8888) so the suite
+ * `JUPYTER_TEST_PORT` overrides the test server port (default 8888) so the suite
  * runs on machines where 8888 is already taken by a live JupyterLab or
  * JupyterHub. The port is also the run's identity: `test-results/<port>` and
  * `playwright-report/<port>` are named after it, because two suites on one
@@ -18,7 +18,7 @@
 const path = require('path');
 const baseConfig = require('@jupyterlab/galata/lib/playwright-config');
 
-const port = process.env.JLAB_TEST_PORT || '8888';
+const port = process.env.JUPYTER_TEST_PORT || '8888';
 
 // Galata's default reporter list writes the HTML report to
 // `playwright-report`. Rewrite that one entry rather than restating the list,

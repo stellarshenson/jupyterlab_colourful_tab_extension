@@ -7,3 +7,4 @@ jupyterlab_colourful_tab_extension
 eslint.config.mjs
 .venv
 .claude
+.agents
