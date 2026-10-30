@@ -491,10 +491,10 @@ class ColourfulTabs implements IColourfulTabs {
 }
 
 /**
- * Initialization data for the jupyterlab_colourful_tab_extension extension.
+ * Initialization data for the @stellarshenson/jupyterlab-colourful-tab-extension extension.
  */
 const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
-  id: 'jupyterlab_colourful_tab_extension:plugin',
+  id: '@stellarshenson/jupyterlab-colourful-tab-extension:plugin',
   description:
     'JupyterLab extension that makes tabs coloured using pastel colours to help identify them when many are open',
   autoStart: true,
@@ -506,7 +506,7 @@ const plugin: JupyterFrontEndPlugin<IColourfulTabs> = {
     settingRegistry: ISettingRegistry | null
   ) => {
     console.log(
-      'JupyterLab extension jupyterlab_colourful_tab_extension is activated!'
+      'JupyterLab extension @stellarshenson/jupyterlab-colourful-tab-extension is activated!'
     );
 
     // Store terminal tracker reference for session name lookups

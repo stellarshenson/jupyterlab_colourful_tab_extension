@@ -12,7 +12,7 @@ from .handlers import setup_route_handlers
 def _jupyter_labextension_paths():
     return [{
         "src": "labextension",
-        "dest": "jupyterlab_colourful_tab_extension"
+        "dest": "@stellarshenson/jupyterlab-colourful-tab-extension"
     }]
 
 

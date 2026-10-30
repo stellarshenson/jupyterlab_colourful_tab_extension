@@ -14,7 +14,7 @@ import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
  * Galata keeps them in memory per test.
  */
 
-const PLUGIN = 'jupyterlab_colourful_tab_extension:plugin';
+const PLUGIN = '@stellarshenson/jupyterlab-colourful-tab-extension:plugin';
 
 /** The two borders that meet at the seam between two tabs, and the tab colour. */
 interface ISeam {
@@ -151,7 +151,7 @@ async function colourByApi(
   await page.evaluate(
     async ([id, colour]) => {
       const api = await (window as any).galata.getPlugin(
-        'jupyterlab_colourful_tab_extension:plugin'
+        '@stellarshenson/jupyterlab-colourful-tab-extension:plugin'
       );
       const app = (window as any).jupyterapp;
       const widget = Array.from(app.shell.widgets('main')).find(

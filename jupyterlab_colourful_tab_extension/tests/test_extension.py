@@ -13,4 +13,4 @@ def test_labextension_paths():
     from jupyterlab_colourful_tab_extension import _jupyter_labextension_paths
     paths = _jupyter_labextension_paths()
     assert len(paths) == 1
-    assert paths[0]["dest"] == "jupyterlab_colourful_tab_extension"
+    assert paths[0]["dest"] == "@stellarshenson/jupyterlab-colourful-tab-extension"

@@ -1309,7 +1309,7 @@ describe('the colour held on the widget title', () => {
 // Pre-existing and inert: both assert the length of an array the test itself
 // declares, so neither reaches any code in src/. Left in place rather than
 // removed, since removing them is not part of this change.
-describe('jupyterlab_colourful_tab_extension', () => {
+describe('@stellarshenson/jupyterlab-colourful-tab-extension', () => {
   it('should define light theme colours', () => {
     const lightColours = [
       { name: 'Rose', colour: '#ffd6e0' },

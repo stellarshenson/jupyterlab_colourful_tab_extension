@@ -134,7 +134,7 @@ async function colourByApi(
   await page.evaluate(
     async ([id, colour, n]) => {
       const api = await (window as any).galata.getPlugin(
-        'jupyterlab_colourful_tab_extension:plugin'
+        '@stellarshenson/jupyterlab-colourful-tab-extension:plugin'
       );
       const widget = Array.from(
         (window as any).jupyterapp.shell.widgets('main')

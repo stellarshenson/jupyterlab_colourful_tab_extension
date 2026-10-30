@@ -54,8 +54,8 @@ artifacts = ["jupyterlab_colourful_tab_extension/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyterlab_colourful_tab_extension/labextension" = "share/jupyter/labextensions/jupyterlab_colourful_tab_extension"
-"install.json" = "share/jupyter/labextensions/jupyterlab_colourful_tab_extension/install.json"
+"jupyterlab_colourful_tab_extension/labextension" = "share/jupyter/labextensions/@stellarshenson/jupyterlab-colourful-tab-extension"
+"install.json" = "share/jupyter/labextensions/@stellarshenson/jupyterlab-colourful-tab-extension/install.json"
 "jupyter-config/jupyter_server_config.d" = "etc/jupyter/jupyter_server_config.d"
 
 [tool.hatch.build.hooks.version]

@@ -19,7 +19,7 @@ test('should emit an activation console message', async ({ page }) => {
     logs.filter(
       s =>
         s ===
-        'JupyterLab extension jupyterlab_colourful_tab_extension is activated!'
+        'JupyterLab extension @stellarshenson/jupyterlab-colourful-tab-extension is activated!'
     )
   ).toHaveLength(1);
 });
