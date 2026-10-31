@@ -2,6 +2,13 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.31] - 2026-10-31
+
+### Changed
+
+- Apply the template files and packages the upgrade left out
+- Record 1.1.29 in the changelog and journal
+
 ## [1.1.29] - 2026-10-31
 
 ### Changed
