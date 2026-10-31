@@ -32,7 +32,7 @@ JupyterLab extension that applies persistent pastel colours to tabs for visual i
 
 **Package Names**:
 
-- npm: `jupyterlab_colourful_tab_extension`
+- npm: `@stellarshenson/jupyterlab-colourful-tab-extension`
 - PyPI: `jupyterlab-colourful-tab-extension`
 - GitHub: `stellarshenson/jupyterlab_colourful_tab_extension`
 

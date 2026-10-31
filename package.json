@@ -1,6 +1,6 @@
 {
     "name": "@stellarshenson/jupyterlab-colourful-tab-extension",
-    "version": "1.1.29",
+    "version": "1.1.30",
     "description": "Jupyterlab extension that makes the tabs coloured (using pastel colours) to help you find tab when many of them are opened. Colour persists between refreshes",
     "keywords": [
         "jupyter",
@@ -113,7 +113,7 @@
         "outputDir": "jupyterlab_colourful_tab_extension/labextension",
         "schemaDir": "schema",
         "sharedPackages": {
-            "jupyterlab_colourful_tab_extension": {
+            "@stellarshenson/jupyterlab-colourful-tab-extension": {
                 "bundled": true,
                 "singleton": true
             }
