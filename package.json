@@ -109,6 +109,16 @@
         "access": "public"
     },
     "jupyterlab": {
+        "discovery": {
+            "server": {
+                "managers": [
+                    "pip"
+                ],
+                "base": {
+                    "name": "jupyterlab_colourful_tab_extension"
+                }
+            }
+        },
         "extension": true,
         "outputDir": "jupyterlab_colourful_tab_extension/labextension",
         "schemaDir": "schema",
