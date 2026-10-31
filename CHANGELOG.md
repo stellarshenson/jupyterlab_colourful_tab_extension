@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.29] - 2026-10-31
+
+### Changed
+
+- No functional changes - released on request with a clean tree since 1.1.28
+
 ## [1.1.28] - 2026-10-30
 
 ### Changed
