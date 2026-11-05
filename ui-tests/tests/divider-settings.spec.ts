@@ -221,14 +221,14 @@ for (const theme of ['light', 'dark'] as const) {
       const plainFirstCurrent = await seam(page, first, second);
 
       // Back on, live: the inactive pair's seam turns a contrastive grey on
-      // both sides, at least the default medium 3:1 against the tab colour
+      // both sides, at least the default low 2:1 against the tab colour
       await setSetting(page, 'dynamicDivider', true);
       await activate(page, other);
       const divided = await seam(page, first, second);
       expect(divided.right).toEqual(divided.left);
       expect(divided.left).not.toEqual(plain.left);
       expect(isGrey(divided.left)).toBe(true);
-      expect(contrast(divided.left, divided.tabBg)).toBeGreaterThanOrEqual(3);
+      expect(contrast(divided.left, divided.tabBg)).toBeGreaterThanOrEqual(2);
       expect(towardTheme(divided.left, divided.tabBg)).toBe(true);
 
       // Either tab current: the active shade already sets it apart, so the

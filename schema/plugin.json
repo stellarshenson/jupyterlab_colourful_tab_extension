@@ -38,7 +38,7 @@
       "description": "Strength of the divider grey between adjacent inactive same-coloured tabs: low targets 2:1 (a subtle hairline), medium 3:1 (the WCAG non-text minimum), high 4:1 (strongest separation).",
       "type": "string",
       "enum": ["low", "medium", "high"],
-      "default": "medium"
+      "default": "low"
     },
     "palette": {
       "title": "Tab colour palette",

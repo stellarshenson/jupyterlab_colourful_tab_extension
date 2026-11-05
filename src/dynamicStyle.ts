@@ -51,7 +51,7 @@ export const CONTRAST_TARGETS: { [K in DividerContrast]: number } = {
 };
 
 /**
- * The value if it is a known contrast magnitude, otherwise 'medium'. Guards
+ * The value if it is a known contrast magnitude, otherwise 'low'. Guards
  * the raw settings value the same way mergePalette guards the palette.
  * Membership is derived from CONTRAST_TARGETS so a new magnitude added there
  * is accepted without touching this guard.
@@ -62,7 +62,7 @@ export function asDividerContrast(value: unknown): DividerContrast {
   return typeof value === 'string' &&
     Object.prototype.hasOwnProperty.call(CONTRAST_TARGETS, value)
     ? (value as DividerContrast)
-    : 'medium';
+    : 'low';
 }
 
 /** The id of the injected <style> element. */
@@ -175,12 +175,12 @@ function dividerRules(id: string, grey: string, prefix: string): string {
  *
  * @param palette - the merged palette to emit
  * @param dynamicDivider - whether to emit the divider rules
- * @param contrast - divider contrast magnitude; default 'medium' (3.0:1)
+ * @param contrast - divider contrast magnitude; default 'low' (2.0:1)
  */
 export function buildDynamicCss(
   palette: IPalette,
   dynamicDivider: boolean,
-  contrast: DividerContrast = 'medium'
+  contrast: DividerContrast = 'low'
 ): string {
   const darkSelector = "[data-jp-theme-light='false']";
   const target = CONTRAST_TARGETS[contrast];

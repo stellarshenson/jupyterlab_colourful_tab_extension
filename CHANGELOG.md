@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.34] - 2026-11-05
+
+### Changed
+
+- Default the divider contrast setting to low (2:1)
+
 ## [1.1.33] - 2026-10-31
 
 ### Changed

@@ -139,9 +139,9 @@ describe('divider contrast magnitudes', () => {
     expect(CONTRAST_TARGETS).toEqual({ low: 2.0, medium: 3.0, high: 4.0 });
   });
 
-  it('defaults to medium', () => {
+  it('defaults to low', () => {
     expect(buildDynamicCss(DEFAULT_PALETTE, true)).toEqual(
-      buildDynamicCss(DEFAULT_PALETTE, true, 'medium')
+      buildDynamicCss(DEFAULT_PALETTE, true, 'low')
     );
   });
 
@@ -201,12 +201,12 @@ describe('divider contrast magnitudes', () => {
     expect(asDividerContrast('low')).toEqual('low');
     expect(asDividerContrast('medium')).toEqual('medium');
     expect(asDividerContrast('high')).toEqual('high');
-    expect(asDividerContrast(undefined)).toEqual('medium');
-    expect(asDividerContrast('HIGH')).toEqual('medium');
-    expect(asDividerContrast(42)).toEqual('medium');
+    expect(asDividerContrast(undefined)).toEqual('low');
+    expect(asDividerContrast('HIGH')).toEqual('low');
+    expect(asDividerContrast(42)).toEqual('low');
     // membership is derived from CONTRAST_TARGETS - prototype-chain keys of
     // the object must not slip through the `in`-style check
-    expect(asDividerContrast('toString')).toEqual('medium');
+    expect(asDividerContrast('toString')).toEqual('low');
   });
 });
 
@@ -289,14 +289,14 @@ describe('default palette copies', () => {
     expect(validate.errors).toBeNull();
     expect(composite.palette).toEqual(DEFAULT_PALETTE);
     expect(composite.dynamicDivider).toBe(true);
-    expect(composite.dividerContrast).toEqual('medium');
+    expect(composite.dividerContrast).toEqual('low');
   });
 
   it('schema dividerContrast enum and default match CONTRAST_TARGETS', () => {
     expect(schema.properties.dividerContrast.enum).toEqual(
       Object.keys(CONTRAST_TARGETS)
     );
-    expect(schema.properties.dividerContrast.default).toEqual('medium');
+    expect(schema.properties.dividerContrast.default).toEqual('low');
     // the guard's junk fallback must be the same value as the schema default,
     // so malformed settings degrade to the product default, not a third value
     expect(asDividerContrast(undefined)).toEqual(
