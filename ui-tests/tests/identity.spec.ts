@@ -454,7 +454,7 @@ test('a file colour follows the path across close and reopen', async ({
   await page.contents.uploadContent(NOTEBOOK, 'text', path);
   const notebook = await openFile(page, path);
   await colourByMenu(page, notebook, 'Purple');
-  expect(await storedColours(page)).toEqual({ [path]: 5 });
+  await expect.poll(() => storedColours(page)).toEqual({ [path]: 5 });
 
   await closeTab(page, notebook);
   const reopened = await openFile(page, path);
