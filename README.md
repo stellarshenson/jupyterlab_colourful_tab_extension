@@ -77,7 +77,7 @@ The package installs a `jupyter_server` extension next to the frontend. It serve
 
 Other extensions can tint a widget's tab, learn what the user picked on it, and take the tab's colour over entirely, through the public `IColourfulTabs` token. It has three members.
 
-- Import the token from `jupyterlab_colourful_tab_extension` and request it as an `optional` (or `requires`) plugin dependency
+- Import the token from `@stellarshenson/jupyterlab-colourful-tab-extension` and request it as an `optional` (or `requires`) plugin dependency
 - `setColour(widget, colourId)` tints a tab, where `colourId` is one of `rose`, `peach`, `lemon`, `mint`, `sky`, `lavender`, or `null` to clear. The tint rides the widget's Lumino `title.className`, so it survives tab re-renders and reordering with no DOM querying. On an unclaimed tab it also drops whatever the right-click menu had stored for that tab, so the two do not fight over it
 - `colourChanged` is a Lumino signal carrying `{ widgetId, colourId }` for every colour picked from the menu and every clear, with `colourId` null for a clear. It is the only way to learn of a choice: a stored value is a leftover rather than evidence of a click, and a claimed tab is never stored at all
 - `claim(widget)` declares that the caller persists this tab's colour and returns an `IDisposable` that releases it. Claims are counted, so one holder's dispose leaves another holder's claim standing
@@ -89,7 +89,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { IColourfulTabs } from 'jupyterlab_colourful_tab_extension';
+import { IColourfulTabs } from '@stellarshenson/jupyterlab-colourful-tab-extension';
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'my_extension:plugin',
@@ -104,4 +104,4 @@ const plugin: JupyterFrontEndPlugin<void> = {
 ```
 
 > [!IMPORTANT]
-> The consumer must declare `jupyterlab_colourful_tab_extension` as a shared `singleton` in its `package.json` `jupyterlab.sharedPackages` block (with `"bundled": false`). Without it, module federation serves two copies of the token and the `optional` dependency silently resolves to `null`.
+> The consumer must declare `@stellarshenson/jupyterlab-colourful-tab-extension` as a shared `singleton` in its `package.json` `jupyterlab.sharedPackages` block (with `"bundled": false`). Without it, module federation serves two copies of the token and the `optional` dependency silently resolves to `null`.

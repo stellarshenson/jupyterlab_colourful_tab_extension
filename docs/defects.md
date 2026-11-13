@@ -289,3 +289,29 @@ Tabs with no stable identity (no file path, no terminal session) and the colour 
   - log: 2026-10-17T17:09:28Z @kj added
   - log: 2026-10-17T17:09:48Z @kj failed before fix: jest 'lets a later unclaimed pick release the mark it supersedes' failed against HEAD with no colour class while the store held mint (logs/workflows/review2/jest-r6-before.log)
   - log: 2026-10-17T17:15:08Z @kj closed
+
+## Extension API `API`
+
+Public IColourfulTabs token and its documentation
+
+- log: 2026-11-13T06:58:10Z @kj category created
+
+- [x] `DEF-API-27-README-IMPORT` **README names the old module for the token** - MEDIUM; README Extension API tells a consumer to import IColourfulTabs from and share jupyterlab_colourful_tab_extension; the npm package is @stellarshenson/jupyterlab-colourful-tab-extension, so the documented import does not resolve; README.md lines 80, 92, 107
+  - evidence: README lines 80, 92, 107 name @stellarshenson/jupyterlab-colourful-tab-extension, the name package.json and the ai code assistants consumer use
+  - root-cause: 2026-11-13T06:58:20Z @kj README kept the unscoped name after the npm package moved to the @stellarshenson scope
+  - repro: follow the README snippet in a consumer extension, jlpm build: module jupyterlab_colourful_tab_extension not found
+  - log: 2026-11-13T06:58:10Z @kj added
+  - log: 2026-11-13T06:58:20Z @kj closed
+
+## Stylesheet `STYLE`
+
+Rules in style/base.css
+
+- log: 2026-11-13T06:58:20Z @kj category created
+
+- [x] `DEF-STYLE-28-DEAD-CSS` **Unused custom menu rules in base.css** - MINOR; style/base.css ships .jp-colourful-tab-menu, -menu-item, -menu-clear and -swatch-* rules; no source, test or sibling extension applies those classes since the Lumino context submenu replaced the custom menu
+  - evidence: 66 lines removed from style/base.css; grep for jp-colourful-tab-menu and -swatch finds nothing in the repository; build_test.py run recorded in the journal
+  - root-cause: 2026-11-13T06:58:20Z @kj rules of the first custom popup menu were left when the menu moved to the schema context submenu
+  - repro: grep -rn 'jp-colourful-tab-menu\|jp-colourful-tab-swatch' src ui-tests: no hit outside style/base.css
+  - log: 2026-11-13T06:58:20Z @kj added
+  - log: 2026-11-13T06:58:20Z @kj closed

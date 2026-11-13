@@ -40,65 +40,6 @@
   --jp-colourful-tab-lavender-active: #30253a;
 }
 
-/* Colour selection menu */
-.jp-colourful-tab-menu {
-  position: fixed;
-  z-index: 10000;
-  background-color: var(--jp-layout-color1);
-  border: 1px solid var(--jp-border-color1);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
-  min-width: 140px;
-  padding: 4px 0;
-}
-
-.jp-colourful-tab-menu-item {
-  display: flex;
-  align-items: center;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--jp-ui-font-color1);
-}
-
-.jp-colourful-tab-menu-item:hover {
-  background-color: var(--jp-layout-color2);
-}
-
-.jp-colourful-tab-swatch {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  margin-right: 8px;
-  border: 1px solid var(--jp-border-color2);
-}
-
-/* Swatch colours */
-.jp-colourful-tab-swatch-rose {
-  background-color: var(--jp-colourful-tab-rose);
-}
-
-.jp-colourful-tab-swatch-peach {
-  background-color: var(--jp-colourful-tab-peach);
-}
-
-.jp-colourful-tab-swatch-lemon {
-  background-color: var(--jp-colourful-tab-lemon);
-}
-
-.jp-colourful-tab-swatch-mint {
-  background-color: var(--jp-colourful-tab-mint);
-}
-
-.jp-colourful-tab-swatch-sky {
-  background-color: var(--jp-colourful-tab-sky);
-}
-
-.jp-colourful-tab-swatch-lavender {
-  background-color: var(--jp-colourful-tab-lavender);
-}
-
 /* Tab colours - apply to tab, inner elements, and shadow DOM parts.
    Inner elements are painted only inside a dock tab: the same class sits on
    the current panel's jp-toolbar, where a descendant rule would also paint
@@ -223,13 +164,6 @@ jp-toolbar.jp-colourful-tab-lavender::part(positioning-region) {
 .lm-mod-current.jp-colourful-tab-lavender,
 .lm-mod-current.jp-colourful-tab-lavender * {
   background-color: var(--jp-colourful-tab-lavender-active) !important;
-}
-
-.jp-colourful-tab-menu-clear {
-  border-top: 1px solid var(--jp-border-color1);
-  margin-top: 4px;
-  padding-top: 8px;
-  color: var(--jp-ui-font-color2);
 }
 
 /* Menu icon colours - use CSS variables for theme awareness */
