@@ -2,6 +2,15 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.37] - 2026-11-13
+
+### Changed
+
+- Poll the store after the menu pick in the close and reopen test
+- State in the README that a renamed file loses its colour
+- Ignore the PayPal donate link in the link check
+- Name the scoped package in the extension API section and remove unused menu rules
+
 ## [1.1.34] - 2026-11-05
 
 ### Changed
