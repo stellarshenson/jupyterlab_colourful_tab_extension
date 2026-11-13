@@ -34,7 +34,7 @@ Assign colours to tabs via right-click context menu for easy visual identificati
 
 - Right-click any tab to assign a colour from the "Tab Colour" submenu
 - Selected (active) tab shows a distinct shade of its colour so it stands out from other coloured tabs
-- Colours persist across browser refreshes via localStorage - a file keeps its colour by path, a terminal for as long as its session runs
+- Colours persist across browser refreshes via localStorage - a file keeps its colour by path, a terminal for as long as its session runs; a renamed file loses its colour at the next reload, and a file later created at the old path takes it
 - Notebook toolbar matches the active tab colour
 - Adjacent inactive tabs sharing the same colour keep a visible divider: the 1px seam between them is recoloured with a contrastive grey computed from the tab colour (darker in the light theme, brighter in the dark theme); the active tab is excluded - its distinct shade already sets it apart. Toggleable via the `dynamicDivider` setting, with strength selectable via `dividerContrast` (low 2:1 hairline, medium 3:1, high 4:1; low is the default)
 - Editable palette in the Settings Editor (Settings Editor → Colourful Tab Extension): inactive and active shades per colour name, for both themes - edits apply live to tabs, toolbar, menu swatches and divider greys

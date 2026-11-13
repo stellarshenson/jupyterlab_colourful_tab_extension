@@ -289,6 +289,12 @@ Tabs with no stable identity (no file path, no terminal session) and the colour 
   - log: 2026-10-17T17:09:28Z @kj added
   - log: 2026-10-17T17:09:48Z @kj failed before fix: jest 'lets a later unclaimed pick release the mark it supersedes' failed against HEAD with no colour class while the store held mint (logs/workflows/review2/jest-r6-before.log)
   - log: 2026-10-17T17:15:08Z @kj closed
+- [x] `DEF-IDENT-29-README-RENAME` **README does not state the rename limit** - MINOR; README Features says a file keeps its colour by path and does not say that a renamed file loses its colour at the next reload, or that a file later created at the old path takes it (accepted behaviour ACC-IDENT-31)
+  - evidence: README.md line 37 now states that a renamed file loses its colour at the next reload and a file later created at the old path takes it; wording matches ACC-IDENT-31, proven by Galata terminals.spec.ts 'a renamed file loses its colour and the old path keeps it'
+  - repro: grep -n 'renamed' README.md: no hit
+  - root-cause: 2026-11-13T07:27:29Z @kj the accepted limit of path identity was recorded in the criteria only, never in the user-facing document
+  - log: 2026-11-13T07:27:29Z @kj added
+  - log: 2026-11-13T07:27:35Z @kj closed
 
 ## Extension API `API`
 
